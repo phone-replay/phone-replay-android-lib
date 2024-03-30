@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'          // << --- ADD This
+    id 'com.google.protobuf' version '0.9.4'
 }
 
 android {
@@ -17,11 +19,65 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'consumer-rules.pro'       // << --- ADD This
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+// 4. Add This Java Blocs:
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)        // << --- ADD This
+    }
+}
+
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17            // << --- ADD This
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// 5. Publishing:
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.github.phone-replay'
+            artifactId = 'phone-replay-android-lib'
+            version = "1.0"
+            pom {
+                description = 'DESCRIPTION'
+            }
+        }
+    }
+    repositories {               // << --- ADD This
+        mavenLocal()
+    }
+}
+
+
+
+protobuf {
+    protoc { artifact = 'com.google.protobuf:protoc:3.19.2' }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.47.0'
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java { option 'lite' }
+            }
+            task.plugins {
+                grpc {
+                    option 'lite'
+                }
+            }
+        }
     }
 }
 

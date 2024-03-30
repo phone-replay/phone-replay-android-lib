@@ -31,7 +31,6 @@ public class DeviceInfo {
         return formatSize(totalMemory);
     }
 
-
     public static String getCurrentNetwork(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
