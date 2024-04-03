@@ -23,6 +23,4 @@ public class TimeLine {
     public String getTargetTime() {
         return targetTime;
     }
-
-    // Opcional: Setters, toString(), etc.
 }
