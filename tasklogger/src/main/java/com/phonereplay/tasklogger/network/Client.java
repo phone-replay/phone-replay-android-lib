@@ -11,8 +11,6 @@ import com.phonereplay.tasklogger.TimeLine;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -83,62 +81,6 @@ public class Client {
 
             conn.disconnect();
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void sendBinaryDataV2(byte[] binaryData, String sessionId, Set<TimeLine> timeLines, DeviceModel deviceModel) {
-        try {
-            URL url = new URL("http://10.0.0.106:3000/api/v1/sdk/create/55840540423a2256372b3f00304f01f735f695bb");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW");
-
-            try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
-                outputStream.writeBytes("------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n");
-                outputStream.writeBytes("Content-Disposition: form-data; name=\"binaryData\"; filename=\"binaryData\"\r\n");
-                outputStream.writeBytes("Content-Type: application/octet-stream\r\n\r\n");
-                outputStream.write(binaryData);
-                outputStream.writeBytes("\r\n");
-
-                int i = 0;
-                for (TimeLine timeLine : timeLines) {
-                    outputStream.writeBytes("------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n");
-                    outputStream.writeBytes("Content-Disposition: form-data; name=\"timeLines[" + i + "].coordinates\"\r\n\r\n");
-                    outputStream.writeBytes(timeLine.getCoordinates());
-                    outputStream.writeBytes("\r\n");
-
-                    outputStream.writeBytes("------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n");
-                    outputStream.writeBytes("Content-Disposition: form-data; name=\"timeLines[" + i + "].gestureType\"\r\n\r\n");
-                    outputStream.writeBytes(timeLine.getGestureType());
-                    outputStream.writeBytes("\r\n");
-
-                    outputStream.writeBytes("------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n");
-                    outputStream.writeBytes("Content-Disposition: form-data; name=\"timeLines[" + i + "].targetTime\"\r\n\r\n");
-                    outputStream.writeBytes(timeLine.getTargetTime());
-                    outputStream.writeBytes("\r\n");
-
-                    i++;
-                }
-
-                outputStream.writeBytes("------WebKitFormBoundary7MA4YWxkTrZu0gW--");
-            }
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    System.out.println(response);
-                }
-            } else {
-                System.out.println("Error: " + responseCode);
-            }
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }
