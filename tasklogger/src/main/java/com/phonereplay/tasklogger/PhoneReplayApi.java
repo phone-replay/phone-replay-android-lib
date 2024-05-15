@@ -36,13 +36,15 @@ public class PhoneReplayApi {
     private static StopwatchUtility stopwatch = new StopwatchUtility();
     @SuppressLint("StaticFieldLeak")
     private static Context context;
+    private static String projectKey;
     public boolean orientation = false;
     public int mainHeight = 0;
     public int mainWidth = 0;
     private View currentView;
 
-    public PhoneReplayApi(Context context) {
+    public PhoneReplayApi(Context context, String accessKey) {
         apiClientService = new PhoneReplayService(context);
+        projectKey = accessKey;
         Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
         PhoneReplayApi.context = context;
     }
@@ -88,7 +90,7 @@ public class PhoneReplayApi {
         }
         new Thread(() -> {
             try {
-                apiClientService.createVideo(gestureRecorder.currentSession, deviceModel);
+                apiClientService.createVideo(gestureRecorder.currentSession, deviceModel, projectKey);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
