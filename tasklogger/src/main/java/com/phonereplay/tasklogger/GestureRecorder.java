@@ -2,22 +2,17 @@ package com.phonereplay.tasklogger;
 
 import android.os.Build;
 
-import com.phonereplay.tasklogger.service.PhoneReplayService;
-
 import java.util.Optional;
 
 public class GestureRecorder {
     public final LocalSession currentSession;
-    private final PhoneReplayService phoneReplayService;
 
-    public GestureRecorder(String sessionId, String projectId, PhoneReplayService phoneReplayService) {
-        this.phoneReplayService = phoneReplayService;
-        this.currentSession = new LocalSession(sessionId, projectId);
+    public GestureRecorder() {
+        this.currentSession = new LocalSession();
     }
 
     public String generateSummaryLog() {
         StringBuilder logBuilder = new StringBuilder();
-        logBuilder.append("Session ID: ").append(currentSession.id).append("\n");
         for (LocalActivity activity : currentSession.activities) {
             logBuilder.append("Activity ID: ").append(activity.id).append("\n");
             for (LocalGesture gesture : activity.gestures) {
@@ -27,10 +22,6 @@ public class GestureRecorder {
             }
         }
         return logBuilder.toString();
-    }
-
-    public void sendLocalSessionData() {
-        phoneReplayService.sendLocalSessionData(currentSession);
     }
 
     public void registerGesture(String activityName, String gestureType, String targetTime, String coordinates) {

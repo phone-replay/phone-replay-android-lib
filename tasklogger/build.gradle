@@ -59,7 +59,6 @@ publishing {
 }
 
 
-
 protobuf {
     protoc { artifact = 'com.google.protobuf:protoc:3.19.2' }
     plugins {
@@ -90,10 +89,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     implementation 'com.google.code.gson:gson:2.10.1'
-
-    // retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
     implementation 'io.grpc:grpc-okhttp:1.60.1'
     implementation 'io.grpc:grpc-protobuf-lite:1.60.1'

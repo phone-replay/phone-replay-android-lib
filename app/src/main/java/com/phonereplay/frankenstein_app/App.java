@@ -1,26 +1,17 @@
 package com.phonereplay.frankenstein_app;
 
 import android.app.Application;
-import android.content.Context;
 
 import com.phonereplay.tasklogger.PhoneReplay;
+import com.smartlook.android.core.api.Smartlook;
 
 public class App extends Application {
-
-    private static Application sApplication;
-
-    public static Application getApplication() {
-        return sApplication;
-    }
-
-    public static Context getContext() {
-        return getApplication().getApplicationContext();
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
-        PhoneReplay.init(this, "6e55b630-88a2-4545-be55-65bd68972d6b");
-        sApplication = this;
+        PhoneReplay.init(this, "55840540423a2256372b3f00304f01f735f695bb");
+
+        Smartlook smartlook = Smartlook.getInstance();
+        smartlook.getPreferences().setProjectKey("9a64208df2a90714d0c6744ee7604df64ac98914");
     }
 }

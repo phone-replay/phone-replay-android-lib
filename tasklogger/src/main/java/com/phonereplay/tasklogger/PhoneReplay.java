@@ -32,7 +32,6 @@ public class PhoneReplay extends Activity {
 
     public static void init(Context application, String accessKey) {
         PhoneReplay.getInstance(application).attachBaseContext();
-        new Thread(() -> phoneReplayApi.getApiClientService().verifyProjectAuth(accessKey)).start();
     }
 
     public synchronized static PhoneReplay getInstance(final Context appContext) {

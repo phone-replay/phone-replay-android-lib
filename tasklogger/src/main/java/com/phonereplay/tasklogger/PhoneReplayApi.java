@@ -10,8 +10,6 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.phonereplay.tasklogger.exception.MyExceptionHandler;
-import com.phonereplay.tasklogger.network.models.Project;
-import com.phonereplay.tasklogger.network.models.reponses.CreateSessionResponse;
 import com.phonereplay.tasklogger.service.PhoneReplayService;
 import com.phonereplay.tasklogger.utils.BitmapUtils;
 
@@ -56,7 +54,6 @@ public class PhoneReplayApi {
         return stopwatch;
     }
 
-
     public static Context getContext() {
         return context;
     }
@@ -67,29 +64,13 @@ public class PhoneReplayApi {
 
     public static void startRecording() {
         Toast.makeText(context, "DEV TEST: gravando video", Toast.LENGTH_LONG).show();
+        new Thread(() -> {
+            gestureRecorder = new GestureRecorder();
 
-        if (apiClientService.getVerifyProjectAuthResponse() == null) {
-            new Thread(() -> apiClientService.verifyProjectAuth()).start();
-        }
-        if (apiClientService.getVerifyProjectAuthResponse().isAuth()) {
-
-            Project project = apiClientService.getVerifyProjectAuthResponse().getProject();
-
-            new Thread(() -> {
-                CreateSessionResponse createSessionResponseResponse = apiClientService.createSession(project.getProjectId());
-                if (createSessionResponseResponse == null) {
-                    return;
-                }
-                if (createSessionResponseResponse.isCreated()) {
-                    String projectId = apiClientService.getVerifyProjectAuthResponse().getProject().getProjectId();
-                    gestureRecorder = new GestureRecorder(createSessionResponseResponse.getSession().getSessionId(), projectId, apiClientService);
-
-                    startRecording = true;
-                    mHandler.postDelayed(thread, RECORDING_INTERVAL);
-                    startCountUp();
-                }
-            }).start();
-        }
+            startRecording = true;
+            mHandler.postDelayed(thread, RECORDING_INTERVAL);
+            startCountUp();
+        }).start();
     }
 
     public static void stopRecording() {
@@ -100,25 +81,18 @@ public class PhoneReplayApi {
 
         Toast.makeText(context, "DEV TEST: parando gravacao de video", Toast.LENGTH_LONG).show();
 
-        if (apiClientService.getVerifyProjectAuthResponse() == null) {
-            return;
+        DeviceModel deviceModel = new DeviceModel(context);
+        if (gestureRecorder != null) {
+            String summaryLog = gestureRecorder.generateSummaryLog();
+            Log.d("GestureRecorderSummary", summaryLog);
         }
-        if (apiClientService.getVerifyProjectAuthResponse().isAuth()) {
-            if (gestureRecorder != null) {
-                String summaryLog = gestureRecorder.generateSummaryLog();
-                Log.d("GestureRecorderSummary", summaryLog);
-                gestureRecorder.sendLocalSessionData();
-                DeviceModel deviceModel = new DeviceModel(context, apiClientService.getSession().getSession().getSessionId());
-                apiClientService.sendDeviceInfo(deviceModel);
+        new Thread(() -> {
+            try {
+                apiClientService.createVideo(gestureRecorder.currentSession, deviceModel);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            new Thread(() -> {
-                try {
-                    apiClientService.createVideo(apiClientService.getSession().getSession().getSessionId(), gestureRecorder.currentSession.getTimeLines());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }).start();
-        }
+        }).start();
     }
 
     private static void startCountUp() {
@@ -143,10 +117,6 @@ public class PhoneReplayApi {
             this.mainHeight = mainHeight;
             this.mainWidth = mainWidth;
         }
-    }
-
-    public PhoneReplayService getApiClientService() {
-        return apiClientService;
     }
 
     public View getCurrentView() {
