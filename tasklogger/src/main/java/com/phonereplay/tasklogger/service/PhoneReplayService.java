@@ -69,7 +69,7 @@ public class PhoneReplayService {
         return compress(byteArrayOutputStream.toByteArray());
     }
 
-    private static byte[] writeImageFromBitmap(Bitmap bitmap) throws IOException {
+    private static byte[] writeImageFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, byteArrayOutputStream);
         return byteArrayOutputStream.toByteArray();
@@ -111,7 +111,7 @@ public class PhoneReplayService {
         bitmap.recycle();
     }
 
-    public void queueBytesBitmapV2(Bitmap bitmap) throws IOException {
+    public void queueBytesBitmapV2(Bitmap bitmap) {
         byte[] image = writeImageFromBitmap(bitmap);
         byte[] combineIdentifierAndData;
 
@@ -133,8 +133,8 @@ public class PhoneReplayService {
         bitmap.recycle();
     }
 
-    public void createVideo(LocalSession timeLines, DeviceModel deviceModel) throws IOException {
-        client.sendBinaryDataV3(compress(fullBytesVideo), timeLines, deviceModel);
+    public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey) throws IOException {
+        client.sendBinaryDataV3(compress(fullBytesVideo), timeLines, deviceModel, projectKey);
         //fullBytesVideo = null;
         if (NetworkUtil.isWiFiConnected(context)) {
         } else {

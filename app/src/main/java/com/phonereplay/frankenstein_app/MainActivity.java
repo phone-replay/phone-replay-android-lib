@@ -3,7 +3,6 @@ package com.phonereplay.frankenstein_app;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,25 +17,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.phonereplay.frankenstein_app.databinding.ActivityMainBinding;
 import com.phonereplay.tasklogger.PhoneReplayApi;
 import com.phonereplay.tasklogger.StopwatchUtility;
-import com.smartlook.android.core.api.Smartlook;
 
 public class MainActivity extends AppCompatActivity implements StopwatchUtility.StopwatchListener {
     private static final int SCREEN_RECORD_REQUEST_CODE = 777;
     ActivityMainBinding binding;
     private NoteViewModel noteViewModel;
-
-    Smartlook smartlookInstance = Smartlook.getInstance();
-
     private TextView textViewTimer;
 
-    public void startMethods(){
+    public void startMethods() {
         PhoneReplayApi.startRecording();
-        smartlookInstance.start();
     }
 
-    public void stopMethods(){
+    public void stopMethods() {
         PhoneReplayApi.stopRecording();
-        smartlookInstance.stop();
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -122,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
 
     @Override
     public void onTick(String time) {
-        Log.d("onTick", "onTick: " + time);
+        //Log.d("onTick", "onTick: " + time);
         runOnUiThread(() -> textViewTimer.setText(time));
     }
 }

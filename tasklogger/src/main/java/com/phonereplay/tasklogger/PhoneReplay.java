@@ -21,22 +21,21 @@ public class PhoneReplay extends Activity {
     private static PhoneReplay sInstance;
     private final Context mAppContext;
     private Activity currentActivity;
-
     private int previousWidth;
     private int previousHeight;
 
-    public PhoneReplay(Context appContext) {
+    public PhoneReplay(Context appContext, String accessKey) {
         mAppContext = appContext;
-        phoneReplayApi = new PhoneReplayApi(appContext);
+        phoneReplayApi = new PhoneReplayApi(appContext, accessKey);
     }
 
     public static void init(Context application, String accessKey) {
-        PhoneReplay.getInstance(application).attachBaseContext();
+        PhoneReplay.getInstance(application, accessKey).attachBaseContext();
     }
 
-    public synchronized static PhoneReplay getInstance(final Context appContext) {
+    public synchronized static PhoneReplay getInstance(final Context appContext, String accessKey) {
         if (sInstance == null) {
-            sInstance = new PhoneReplay(appContext);
+            sInstance = new PhoneReplay(appContext, accessKey);
         }
         return sInstance;
     }

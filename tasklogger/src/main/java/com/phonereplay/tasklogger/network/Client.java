@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import io.grpc.ManagedChannel;
@@ -24,9 +25,9 @@ import io.grpc.ManagedChannelBuilder;
 
 public class Client {
 
-    public void sendBinaryDataV3(byte[] file, LocalSession actions, DeviceModel device) {
+    public void sendBinaryDataV3(byte[] file, LocalSession actions, DeviceModel device, String projectKey) {
         try {
-            URL url = new URL("http://10.0.0.106:3000/api/v1/sdk/create/55840540423a2256372b3f00304f01f735f695bb");
+            URL url = new URL("http://10.0.0.106:3000/api/v1/sdk/create/" + projectKey);
             String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -35,7 +36,7 @@ public class Client {
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             OutputStream outputStream = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
 
             // Anexar arquivo
             writer.write("--" + boundary + "\r\n");

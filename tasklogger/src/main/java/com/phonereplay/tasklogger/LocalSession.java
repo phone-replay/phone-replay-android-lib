@@ -20,16 +20,4 @@ public class LocalSession {
                 .filter(activity -> activity.id.equals(activityId))
                 .findFirst();
     }
-
-    // Método para recuperar TimeLines de todas as atividades
-    public List<TimeLine> getTimeLines() {
-        List<TimeLine> timeLines = new ArrayList<>();
-        for (LocalActivity activity : activities) {
-            for (LocalGesture gesture : activity.gestures) {
-                TimeLine timeLine = new TimeLine(gesture.coordinates, gesture.gestureType, gesture.targetTime);
-                timeLines.add(timeLine);
-            }
-        }
-        return timeLines;
-    }
 }
