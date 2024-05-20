@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.library'
     id 'maven-publish'          // << --- ADD This
-    id 'com.google.protobuf' version '0.9.4'
 }
 
 android {
@@ -59,27 +58,6 @@ publishing {
 }
 
 
-protobuf {
-    protoc { artifact = 'com.google.protobuf:protoc:3.19.2' }
-    plugins {
-        grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.47.0'
-        }
-    }
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                java { option 'lite' }
-            }
-            task.plugins {
-                grpc {
-                    option 'lite'
-                }
-            }
-        }
-    }
-}
-
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -90,8 +68,6 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    implementation 'io.grpc:grpc-okhttp:1.60.1'
-    implementation 'io.grpc:grpc-protobuf-lite:1.60.1'
-    implementation 'io.grpc:grpc-stub:1.60.1'
-    implementation 'org.apache.tomcat:annotations-api:6.0.53'
+    implementation 'org.lz4:lz4-java:1.8.0'
+
 }
