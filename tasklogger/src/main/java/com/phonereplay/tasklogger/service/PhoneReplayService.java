@@ -2,43 +2,27 @@ package com.phonereplay.tasklogger.service;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
 
 import com.phonereplay.tasklogger.DeviceModel;
 import com.phonereplay.tasklogger.LocalSession;
-import com.phonereplay.tasklogger.TimeLine;
-import com.phonereplay.tasklogger.network.ApiClient;
-import com.phonereplay.tasklogger.network.GrpcClient;
-import com.phonereplay.tasklogger.network.models.reponses.CreateSessionResponse;
-import com.phonereplay.tasklogger.network.models.reponses.VerifyProjectAuthResponse;
+import com.phonereplay.tasklogger.network.Client;
 import com.phonereplay.tasklogger.utils.NetworkUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.zip.Deflater;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.zip.GZIPOutputStream;
 
 public class PhoneReplayService {
     private static final int COMPRESSION_QUALITY = 10;
-    private final ApiClient apiClient;
-    private final GrpcClient grpcClient;
+    private final Client client;
     private final Context context;
     private byte[] fullBytesVideo;
     private byte[] previousImageCompressed;
-    private VerifyProjectAuthResponse verifyProjectAuthResponse;
-    private CreateSessionResponse session;
-    private String accessKey;
 
     public PhoneReplayService(Context context) {
-        this.apiClient = new ApiClient();
-        this.grpcClient = new GrpcClient();
+        this.client = new Client();
         this.context = context;
     }
 
@@ -72,20 +56,24 @@ public class PhoneReplayService {
         }
     }
 
-    /*
-    private static String encodeToBase64(byte[] binaryData) {
-        byte[] base64Encoded = android.util.Base64.encode(binaryData, Base64.DEFAULT);
-        return new String(base64Encoded);
+    public static byte[] compressGzip(byte[] data) throws IOException {
+        if (data == null) {
+            return null;
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
+        gzipOutputStream.write(data);
+        gzipOutputStream.close();
+        return baos.toByteArray();
     }
-     */
 
     private static byte[] writeImageCompressedFromBitmap(Bitmap bitmap) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, byteArrayOutputStream);
-        return compress(byteArrayOutputStream.toByteArray());
+        return compressGzip(byteArrayOutputStream.toByteArray());
     }
 
-    private static byte[] writeImageFromBitmap(Bitmap bitmap) throws IOException {
+    private static byte[] writeImageFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, byteArrayOutputStream);
         return byteArrayOutputStream.toByteArray();
@@ -105,146 +93,32 @@ public class PhoneReplayService {
         return combinedData;
     }
 
-    public CreateSessionResponse getSession() {
-        return session;
-    }
+    public void queueBytesBitmap(Bitmap bitmap, boolean compress) throws IOException {
+        byte[] imageData;
+        if (compress) {
+            imageData = writeImageCompressedFromBitmap(bitmap); // Método que comprime a imagem
+        } else {
+            imageData = writeImageFromBitmap(bitmap); // Método que não comprime a imagem
+        }
 
-    public VerifyProjectAuthResponse getVerifyProjectAuthResponse() {
-        return verifyProjectAuthResponse;
-    }
-
-    public void queueBytesBitmap(Bitmap bitmap) throws IOException {
-        byte[] imageCompressed = writeImageCompressedFromBitmap(bitmap);
         byte[] combineIdentifierAndData;
-
         if (fullBytesVideo != null) {
-            if (compareByteArrays(previousImageCompressed, imageCompressed)) {
+            if (compareByteArrays(previousImageCompressed, imageData)) {
                 combineIdentifierAndData = combineIdentifierAndData("D".getBytes());
             } else {
-                combineIdentifierAndData = combineIdentifierAndData(imageCompressed);
-                previousImageCompressed = imageCompressed;
+                combineIdentifierAndData = combineIdentifierAndData(imageData);
+                previousImageCompressed = imageData;
             }
-            byte[] joinByteArrays;
-            joinByteArrays = joinByteArrays(fullBytesVideo, combineIdentifierAndData);
-            fullBytesVideo = joinByteArrays;
+            fullBytesVideo = joinByteArrays(fullBytesVideo, combineIdentifierAndData);
         } else {
-            previousImageCompressed = imageCompressed;
-            combineIdentifierAndData = imageCompressed;
-            fullBytesVideo = combineIdentifierAndData;
+            previousImageCompressed = imageData;
+            fullBytesVideo = imageData;
         }
         bitmap.recycle();
     }
 
-    public void queueBytesBitmapV2(Bitmap bitmap) throws IOException {
-        byte[] image = writeImageFromBitmap(bitmap);
-        byte[] combineIdentifierAndData;
-
-        if (fullBytesVideo != null) {
-            if (compareByteArrays(previousImageCompressed, image)) {
-                combineIdentifierAndData = combineIdentifierAndData("D".getBytes());
-            } else {
-                combineIdentifierAndData = combineIdentifierAndData(image);
-                previousImageCompressed = image;
-            }
-            byte[] joinByteArrays;
-            joinByteArrays = joinByteArrays(fullBytesVideo, combineIdentifierAndData);
-            fullBytesVideo = joinByteArrays;
-        } else {
-            previousImageCompressed = image;
-            combineIdentifierAndData = image;
-            fullBytesVideo = combineIdentifierAndData;
-        }
-        bitmap.recycle();
-    }
-
-    public CreateSessionResponse createSession(String projectId) {
-        if (projectId == null) {
-            return null;
-        }
-
-        Call<CreateSessionResponse> call = apiClient.createSession(projectId);
-        try {
-            Response<CreateSessionResponse> createSessionResponseResponse = call.execute();
-            if (createSessionResponseResponse.isSuccessful()) {
-                session = createSessionResponseResponse.body();
-                return session;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public void sendLocalSessionData(LocalSession localSession) {
-        Call<Void> call = apiClient.sendLocalSessionData(localSession);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("Upload", "Dados enviados com sucesso.");
-                } else {
-                    Log.d("Upload", "Falha ao enviar dados. Código de resposta: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                Log.d("Upload", "Erro na chamada de rede", t);
-            }
-        });
-    }
-
-    public void sendDeviceInfo(DeviceModel deviceModel) {
-        Call<Void> call = apiClient.sendDeviceInfo(deviceModel);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("Upload", "Dados enviados com sucesso.");
-                } else {
-                    Log.d("Upload", "Falha ao enviar dados. Código de resposta: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                Log.d("Upload", "Erro na chamada de rede", t);
-            }
-        });
-    }
-
-
-    public void verifyProjectAuth(String project_access_key) {
-        this.accessKey = project_access_key;
-        Call<VerifyProjectAuthResponse> call = apiClient.verifyProjectAuth(project_access_key);
-
-        try {
-            Response<VerifyProjectAuthResponse> createSessionResponseResponse = call.execute();
-            verifyProjectAuthResponse = createSessionResponseResponse.body();
-        } catch (IOException e) {
-            System.out.println();
-            // handle error
-        }
-    }
-
-    public void verifyProjectAuth() {
-        if (accessKey == null) {
-            return;
-        }
-
-        Call<VerifyProjectAuthResponse> call = apiClient.verifyProjectAuth(accessKey);
-        try {
-            Response<VerifyProjectAuthResponse> createSessionResponseResponse = call.execute();
-            verifyProjectAuthResponse = createSessionResponseResponse.body();
-        } catch (IOException e) {
-            System.out.println();
-        }
-    }
-
-    public void createVideo(String sessionId, Set<TimeLine> timeLines) throws IOException {
-        grpcClient.sendBinaryData(compress(fullBytesVideo), sessionId, timeLines);
+    public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey) throws IOException {
+        client.sendBinaryDataV3(compress(fullBytesVideo), timeLines, deviceModel, projectKey);
         //fullBytesVideo = null;
         if (NetworkUtil.isWiFiConnected(context)) {
         } else {

@@ -3,7 +3,6 @@ package com.phonereplay.frankenstein_app;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,8 +22,15 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
     private static final int SCREEN_RECORD_REQUEST_CODE = 777;
     ActivityMainBinding binding;
     private NoteViewModel noteViewModel;
-
     private TextView textViewTimer;
+
+    public void startMethods() {
+        PhoneReplayApi.startRecording();
+    }
+
+    public void stopMethods() {
+        PhoneReplayApi.stopRecording();
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -32,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        noteViewModel = new ViewModelProvider(this, (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(this.getApplication()))
+        noteViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(this.getApplication()))
                 .get(NoteViewModel.class);
         binding.floatingActionButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, DataInsertActivity.class);
@@ -40,11 +46,11 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
             intent.putExtra("type", "addMode");
             startActivityForResult(intent, 1);
         });
-        binding.buttonFirst.setOnClickListener(view -> PhoneReplayApi.startRecording());
+        binding.buttonFirst.setOnClickListener(view -> startMethods());
         textViewTimer = findViewById(R.id.textViewTimer);
         PhoneReplayApi.getStopwatch().setStopwatchListener(this);
 
-        binding.buttonStop.setOnClickListener(view -> PhoneReplayApi.stopRecording());
+        binding.buttonStop.setOnClickListener(view -> stopMethods());
 
         binding.Rv.setLayoutManager(new LinearLayoutManager(this));
         binding.Rv.setHasFixedSize(true);
@@ -109,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
 
     @Override
     public void onTick(String time) {
-        Log.d("onTick", "onTick: " + time);
+        //Log.d("onTick", "onTick: " + time);
         runOnUiThread(() -> textViewTimer.setText(time));
     }
 }

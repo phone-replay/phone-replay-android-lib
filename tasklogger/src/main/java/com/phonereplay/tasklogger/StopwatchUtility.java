@@ -3,7 +3,6 @@ package com.phonereplay.tasklogger;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.util.Log;
 
 public class StopwatchUtility {
     private final Handler handler;
@@ -72,7 +71,7 @@ public class StopwatchUtility {
     private void onTick(int hours, int minutes, int seconds, int milliSeconds) {
         double fractionalSeconds = seconds + (milliSeconds / 1000.0);
         timer = String.format("%02d:%02d:%05.2f", hours, minutes, fractionalSeconds);
-        Log.d("onTick", "onTick: " + timer);
+        //Log.d("onTick", "onTick: " + timer);
         if (listener != null) {
             listener.onTick(timer);
         }
