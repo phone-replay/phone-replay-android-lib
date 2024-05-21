@@ -18,12 +18,10 @@ public class DeviceModel {
     private final String currentNetwork;
     private final String language;
     private final float batteryLevel;
-    private final String sessionId;
     private final String screenResolution;
     private final String platform;
 
-    public DeviceModel(Context context, String sessionId) {
-        this.sessionId = sessionId;
+    public DeviceModel(Context context) {
         this.manufacturer = Build.MANUFACTURER;
         this.model = Build.MODEL;
         this.device = Build.DEVICE;
