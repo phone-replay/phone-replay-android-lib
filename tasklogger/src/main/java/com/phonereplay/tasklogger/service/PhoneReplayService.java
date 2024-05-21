@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.zip.Deflater;
+import java.util.zip.GZIPOutputStream;
 
 public class PhoneReplayService {
     private static final int COMPRESSION_QUALITY = 10;
@@ -19,7 +20,6 @@ public class PhoneReplayService {
     private final Context context;
     private byte[] fullBytesVideo;
     private byte[] previousImageCompressed;
-    private String accessKey;
 
     public PhoneReplayService(Context context) {
         this.client = new Client();
@@ -56,17 +56,21 @@ public class PhoneReplayService {
         }
     }
 
-    /*
-    private static String encodeToBase64(byte[] binaryData) {
-        byte[] base64Encoded = android.util.Base64.encode(binaryData, Base64.DEFAULT);
-        return new String(base64Encoded);
+    public static byte[] compressGzip(byte[] data) throws IOException {
+        if (data == null) {
+            return null;
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
+        gzipOutputStream.write(data);
+        gzipOutputStream.close();
+        return baos.toByteArray();
     }
-     */
 
     private static byte[] writeImageCompressedFromBitmap(Bitmap bitmap) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, byteArrayOutputStream);
-        return compress(byteArrayOutputStream.toByteArray());
+        return compressGzip(byteArrayOutputStream.toByteArray());
     }
 
     private static byte[] writeImageFromBitmap(Bitmap bitmap) {
@@ -89,46 +93,26 @@ public class PhoneReplayService {
         return combinedData;
     }
 
-    public void queueBytesBitmap(Bitmap bitmap) throws IOException {
-        byte[] imageCompressed = writeImageCompressedFromBitmap(bitmap);
-        byte[] combineIdentifierAndData;
-
-        if (fullBytesVideo != null) {
-            if (compareByteArrays(previousImageCompressed, imageCompressed)) {
-                combineIdentifierAndData = combineIdentifierAndData("D".getBytes());
-            } else {
-                combineIdentifierAndData = combineIdentifierAndData(imageCompressed);
-                previousImageCompressed = imageCompressed;
-            }
-            byte[] joinByteArrays;
-            joinByteArrays = joinByteArrays(fullBytesVideo, combineIdentifierAndData);
-            fullBytesVideo = joinByteArrays;
+    public void queueBytesBitmap(Bitmap bitmap, boolean compress) throws IOException {
+        byte[] imageData;
+        if (compress) {
+            imageData = writeImageCompressedFromBitmap(bitmap); // Método que comprime a imagem
         } else {
-            previousImageCompressed = imageCompressed;
-            combineIdentifierAndData = imageCompressed;
-            fullBytesVideo = combineIdentifierAndData;
+            imageData = writeImageFromBitmap(bitmap); // Método que não comprime a imagem
         }
-        bitmap.recycle();
-    }
 
-    public void queueBytesBitmapV2(Bitmap bitmap) {
-        byte[] image = writeImageFromBitmap(bitmap);
         byte[] combineIdentifierAndData;
-
         if (fullBytesVideo != null) {
-            if (compareByteArrays(previousImageCompressed, image)) {
+            if (compareByteArrays(previousImageCompressed, imageData)) {
                 combineIdentifierAndData = combineIdentifierAndData("D".getBytes());
             } else {
-                combineIdentifierAndData = combineIdentifierAndData(image);
-                previousImageCompressed = image;
+                combineIdentifierAndData = combineIdentifierAndData(imageData);
+                previousImageCompressed = imageData;
             }
-            byte[] joinByteArrays;
-            joinByteArrays = joinByteArrays(fullBytesVideo, combineIdentifierAndData);
-            fullBytesVideo = joinByteArrays;
+            fullBytesVideo = joinByteArrays(fullBytesVideo, combineIdentifierAndData);
         } else {
-            previousImageCompressed = image;
-            combineIdentifierAndData = image;
-            fullBytesVideo = combineIdentifierAndData;
+            previousImageCompressed = imageData;
+            fullBytesVideo = imageData;
         }
         bitmap.recycle();
     }

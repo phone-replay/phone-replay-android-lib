@@ -153,7 +153,7 @@ public class PhoneReplayApi {
                             if (startRecording) {
                                 try {
                                     Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
-                                    apiClientService.queueBytesBitmapV2(bitmap);
+                                    apiClientService.queytesBitmap(bitmap, true);
                                     currentView.destroyDrawingCache();
                                 } catch (Exception e) {
                                     e.printStackTrace();
