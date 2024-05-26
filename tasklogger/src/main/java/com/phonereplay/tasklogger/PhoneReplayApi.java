@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.phonereplay.tasklogger.exception.MyExceptionHandler;
 import com.phonereplay.tasklogger.service.PhoneReplayService;
@@ -65,36 +64,37 @@ public class PhoneReplayApi {
     }
 
     public static void startRecording() {
-        Toast.makeText(context, "DEV TEST: gravando video", Toast.LENGTH_LONG).show();
         new Thread(() -> {
-            gestureRecorder = new GestureRecorder();
-
-            startRecording = true;
-            mHandler.postDelayed(thread, RECORDING_INTERVAL);
-            startCountUp();
+            boolean validateAccessKey = apiClientService.validateAccessKey(projectKey);
+            if (validateAccessKey) {
+                gestureRecorder = new GestureRecorder();
+                startRecording = true;
+                mHandler.postDelayed(thread, RECORDING_INTERVAL);
+                startCountUp();
+            }
         }).start();
     }
 
     public static void stopRecording() {
-        startRecording = false;
-        mHandler.removeCallbacks(thread);
-        Log.d("timer", stopwatch.timer);
-        stopwatch.stop();
+        if (startRecording) {
+            startRecording = false;
+            mHandler.removeCallbacks(thread);
+            Log.d("timer", stopwatch.timer);
+            stopwatch.stop();
 
-        Toast.makeText(context, "DEV TEST: parando gravacao de video", Toast.LENGTH_LONG).show();
-
-        DeviceModel deviceModel = new DeviceModel(context);
-        if (gestureRecorder != null) {
-            String summaryLog = gestureRecorder.generateSummaryLog();
-            Log.d("GestureRecorderSummary", summaryLog);
-        }
-        new Thread(() -> {
-            try {
-                apiClientService.createVideo(gestureRecorder.currentSession, deviceModel, projectKey);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            DeviceModel deviceModel = new DeviceModel(context);
+            if (gestureRecorder != null) {
+                String summaryLog = gestureRecorder.generateSummaryLog();
+                Log.d("GestureRecorderSummary", summaryLog);
             }
-        }).start();
+            new Thread(() -> {
+                try {
+                    apiClientService.createVideo(gestureRecorder.currentSession, deviceModel, projectKey);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
+        }
     }
 
     private static void startCountUp() {

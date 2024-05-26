@@ -96,9 +96,9 @@ public class PhoneReplayService {
     public void queueBytesBitmap(Bitmap bitmap, boolean compress) throws IOException {
         byte[] imageData;
         if (compress) {
-            imageData = writeImageCompressedFromBitmap(bitmap); // Método que comprime a imagem
+            imageData = writeImageCompressedFromBitmap(bitmap);
         } else {
-            imageData = writeImageFromBitmap(bitmap); // Método que não comprime a imagem
+            imageData = writeImageFromBitmap(bitmap);
         }
 
         byte[] combineIdentifierAndData;
@@ -118,10 +118,14 @@ public class PhoneReplayService {
     }
 
     public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey) throws IOException {
-        client.sendBinaryDataV3(compress(fullBytesVideo), timeLines, deviceModel, projectKey);
+        client.sendBinaryData(compress(fullBytesVideo), timeLines, deviceModel, projectKey);
         //fullBytesVideo = null;
         if (NetworkUtil.isWiFiConnected(context)) {
         } else {
         }
+    }
+
+    public boolean validateAccessKey(String projectKey) {
+        return client.validateAccessKey(projectKey);
     }
 }
