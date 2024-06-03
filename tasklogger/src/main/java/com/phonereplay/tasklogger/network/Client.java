@@ -1,5 +1,7 @@
 package com.phonereplay.tasklogger.network;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
@@ -20,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 
 public class Client {
 
+    private static String BASE_URL = null;
+
     @NonNull
     private static String getString(HttpURLConnection conn) throws IOException {
         InputStream responseStream = new BufferedInputStream(conn.getInputStream());
@@ -30,14 +34,12 @@ public class Client {
             stringBuilder.append(line).append("\n");
         }
         responseStreamReader.close();
-
-        String response = stringBuilder.toString();
-        return response;
+        return stringBuilder.toString();
     }
 
     public boolean validateAccessKey(String projectKey) {
         try {
-            URL url = new URL("http://10.0.0.106:8080/check-recording?key=" + projectKey);
+            URL url = new URL(BASE_URL + "/check-recording?key=" + projectKey);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             int responseCode = con.getResponseCode();
@@ -61,7 +63,7 @@ public class Client {
 
     public void sendBinaryData(byte[] file, LocalSession actions, DeviceModel device, String projectKey) {
         try {
-            URL url = new URL("http://10.0.0.106:8080/write?key=" + projectKey);
+            URL url = new URL(BASE_URL + "/write?key=" + projectKey);
             String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -101,6 +103,24 @@ public class Client {
             System.out.println("Response: " + response);
 
             conn.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void callEndpoint() {
+        try {
+            URL url = new URL("https://columba-url-wgvjiuyt2q-uc.a.run.app/url");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            int responseCode = con.getResponseCode();
+            if (responseCode == 200) {
+                String response = getString(con);
+                Log.d("Response from Columba endpoint: ", response);
+                BASE_URL = response.trim();
+            } else {
+                System.out.println("Failed to call Columba endpoint. Response code: " + responseCode);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

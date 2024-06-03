@@ -1,12 +1,10 @@
 package com.phonereplay.tasklogger.service;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 
 import com.phonereplay.tasklogger.DeviceModel;
 import com.phonereplay.tasklogger.LocalSession;
 import com.phonereplay.tasklogger.network.Client;
-import com.phonereplay.tasklogger.utils.NetworkUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,13 +15,12 @@ import java.util.zip.GZIPOutputStream;
 public class PhoneReplayService {
     private static final int COMPRESSION_QUALITY = 10;
     private final Client client;
-    private final Context context;
     private byte[] fullBytesVideo;
     private byte[] previousImageCompressed;
 
-    public PhoneReplayService(Context context) {
+    public PhoneReplayService() {
         this.client = new Client();
-        this.context = context;
+        new Thread(client::callEndpoint).start();
     }
 
     private static byte[] joinByteArrays(byte[] array1, byte[] array2) {
@@ -119,10 +116,7 @@ public class PhoneReplayService {
 
     public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey) throws IOException {
         client.sendBinaryData(compress(fullBytesVideo), timeLines, deviceModel, projectKey);
-        //fullBytesVideo = null;
-        if (NetworkUtil.isWiFiConnected(context)) {
-        } else {
-        }
+        this.fullBytesVideo = null;
     }
 
     public boolean validateAccessKey(String projectKey) {
