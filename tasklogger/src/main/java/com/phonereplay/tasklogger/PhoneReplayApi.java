@@ -42,7 +42,7 @@ public class PhoneReplayApi {
     private View currentView;
 
     public PhoneReplayApi(Context context, String accessKey) {
-        apiClientService = new PhoneReplayService(context);
+        apiClientService = new PhoneReplayService();
         projectKey = accessKey;
         Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
         PhoneReplayApi.context = context;
