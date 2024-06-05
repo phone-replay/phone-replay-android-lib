@@ -13,9 +13,6 @@ import android.view.Window.Callback;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 public class UserInteractionAwareCallback extends GestureDetector.SimpleOnGestureListener implements Callback {
 
     private static final long SWIPE_THRESHOLD = 100;
@@ -43,7 +40,7 @@ public class UserInteractionAwareCallback extends GestureDetector.SimpleOnGestur
     }
 
     @Override
-    public boolean onDown(@NonNull MotionEvent e) {
+    public boolean onDown(MotionEvent e) {
         return true;
     }
 
@@ -72,7 +69,7 @@ public class UserInteractionAwareCallback extends GestureDetector.SimpleOnGestur
     }
 
     @Override
-    public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         //handleTouchAction("Trail", e1.getEventTime());
         return true;
     }
@@ -115,22 +112,22 @@ public class UserInteractionAwareCallback extends GestureDetector.SimpleOnGestur
     }
 
     @Override
-    public boolean onCreatePanelMenu(int featureId, @NonNull Menu menu) {
+    public boolean onCreatePanelMenu(int featureId, Menu menu) {
         return originalCallback.onCreatePanelMenu(featureId, menu);
     }
 
     @Override
-    public boolean onPreparePanel(int featureId, View view, @NonNull Menu menu) {
+    public boolean onPreparePanel(int featureId, View view, Menu menu) {
         return originalCallback.onPreparePanel(featureId, view, menu);
     }
 
     @Override
-    public boolean onMenuOpened(int featureId, @NonNull Menu menu) {
+    public boolean onMenuOpened(int featureId, Menu menu) {
         return originalCallback.onMenuOpened(featureId, menu);
     }
 
     @Override
-    public boolean onMenuItemSelected(int featureId, @NonNull MenuItem item) {
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
         return originalCallback.onMenuItemSelected(featureId, item);
     }
 
@@ -160,7 +157,7 @@ public class UserInteractionAwareCallback extends GestureDetector.SimpleOnGestur
     }
 
     @Override
-    public void onPanelClosed(int featureId, @NonNull Menu menu) {
+    public void onPanelClosed(int featureId, Menu menu) {
         originalCallback.onPanelClosed(featureId, menu);
     }
 
@@ -174,13 +171,11 @@ public class UserInteractionAwareCallback extends GestureDetector.SimpleOnGestur
         return false;
     }
 
-    @Nullable
     @Override
     public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
         return null;
     }
 
-    @Nullable
     @Override
     public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int type) {
         return null;

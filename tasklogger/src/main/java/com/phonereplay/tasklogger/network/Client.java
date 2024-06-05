@@ -2,8 +2,6 @@ package com.phonereplay.tasklogger.network;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.google.gson.Gson;
 import com.phonereplay.tasklogger.DeviceModel;
 import com.phonereplay.tasklogger.LocalSession;
@@ -24,7 +22,6 @@ public class Client {
 
     private static String BASE_URL = null;
 
-    @NonNull
     private static String getString(HttpURLConnection conn) throws IOException {
         InputStream responseStream = new BufferedInputStream(conn.getInputStream());
         BufferedReader responseStreamReader = new BufferedReader(new InputStreamReader(responseStream));
