@@ -58,7 +58,7 @@ public class Client {
         }
     }
 
-    public void sendBinaryData(byte[] file, LocalSession actions, DeviceModel device, String projectKey) {
+    public void sendBinaryData(byte[] file, LocalSession actions, DeviceModel device, String projectKey, long duration) {
         try {
             URL url = new URL(BASE_URL + "/write?key=" + projectKey);
             String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
@@ -90,6 +90,11 @@ public class Client {
             writer.write("Content-Disposition: form-data; name=\"actions\"\r\n\r\n");
             String actionsJson = gson.toJson(actions);
             writer.write(actionsJson);
+            writer.write("\r\n");
+
+            writer.write("--" + boundary + "\r\n");
+            writer.write("Content-Disposition: form-data; name=\"duration\"\r\n\r\n");
+            writer.write(String.valueOf(duration));
             writer.write("\r\n");
 
             writer.write("--" + boundary + "--\r\n");

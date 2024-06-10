@@ -13,7 +13,7 @@ import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 
 public class PhoneReplayService {
-    private static final int COMPRESSION_QUALITY = 10;
+    private static final int COMPRESSION_QUALITY = 1;
     private final Client client;
     private byte[] fullBytesVideo;
     private byte[] previousImageCompressed;
@@ -114,8 +114,8 @@ public class PhoneReplayService {
         bitmap.recycle();
     }
 
-    public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey) throws IOException {
-        client.sendBinaryData(compress(fullBytesVideo), timeLines, deviceModel, projectKey);
+    public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey, long duration) throws IOException {
+        client.sendBinaryData(compress(fullBytesVideo), timeLines, deviceModel, projectKey, duration);
         this.fullBytesVideo = null;
     }
 
