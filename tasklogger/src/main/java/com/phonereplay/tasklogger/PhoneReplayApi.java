@@ -36,6 +36,8 @@ public class PhoneReplayApi {
     @SuppressLint("StaticFieldLeak")
     private static Context context;
     private static String projectKey;
+    private static long startTime;
+    private static long endTime;
     public boolean orientation = false;
     public int mainHeight = 0;
     public int mainWidth = 0;
@@ -69,18 +71,25 @@ public class PhoneReplayApi {
             if (validateAccessKey) {
                 gestureRecorder = new GestureRecorder();
                 startRecording = true;
+                startTime = System.currentTimeMillis();
                 mHandler.postDelayed(thread, RECORDING_INTERVAL);
                 startCountUp();
             }
         }).start();
     }
 
+
     public static void stopRecording() {
         if (startRecording) {
             startRecording = false;
+            endTime = System.currentTimeMillis();
             mHandler.removeCallbacks(thread);
             Log.d("timer", stopwatch.timer);
             stopwatch.stop();
+
+            // Calcular a duração da gravação
+            long duration = endTime - startTime;
+            Log.d("RecordingDuration", "Duração da gravação: " + duration + " milissegundos");
 
             DeviceModel deviceModel = new DeviceModel(context);
             if (gestureRecorder != null) {
@@ -89,7 +98,7 @@ public class PhoneReplayApi {
             }
             new Thread(() -> {
                 try {
-                    apiClientService.createVideo(gestureRecorder.currentSession, deviceModel, projectKey);
+                    apiClientService.createVideo(gestureRecorder.currentSession, deviceModel, projectKey, duration);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
