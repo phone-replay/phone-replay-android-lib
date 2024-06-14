@@ -10,7 +10,6 @@ import android.view.View;
 
 import com.phonereplay.tasklogger.exception.MyExceptionHandler;
 import com.phonereplay.tasklogger.service.PhoneReplayService;
-import com.phonereplay.tasklogger.utils.BitmapUtils;
 
 import java.io.IOException;
 
@@ -161,7 +160,8 @@ public class PhoneReplayApi {
                         public void run() {
                             if (startRecording) {
                                 try {
-                                    Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
+                                    Bitmap bitmap = currentView.getDrawingCache();
+                                    //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
                                     apiClientService.queueBytesBitmap(bitmap, true);
                                     currentView.destroyDrawingCache();
                                 } catch (Exception e) {

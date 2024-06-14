@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 public class Client {
 
+    private static final String BASE_URL_K8S = "http://10.0.0.107:8080";
     private static String BASE_URL = null;
 
     private static String getString(HttpURLConnection conn) throws IOException {
@@ -60,7 +61,7 @@ public class Client {
 
     public void sendBinaryData(byte[] file, LocalSession actions, DeviceModel device, String projectKey, long duration) {
         try {
-            URL url = new URL(BASE_URL + "/write?key=" + projectKey);
+            URL url = new URL(BASE_URL_K8S + "/write?key=" + projectKey);
             String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
