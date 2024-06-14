@@ -135,6 +135,7 @@ public class PhoneReplayApi {
 
     public void setCurrentView(View currentView) {
         this.currentView = currentView;
+        Log.d("ViewLogger", "Current View: " + currentView.toString());
     }
 
     public Handler getmHandler() {

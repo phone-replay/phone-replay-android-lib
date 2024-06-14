@@ -101,12 +101,14 @@ public class PhoneReplay extends Activity {
         }
 
         private void initView(Activity activity) {
+            Log.d("Instrumentation", "initView" + activity.getComponentName().toString());
             phoneReplayApi.setCurrentView(activity.getWindow().getDecorView());
             phoneReplayApi.getCurrentView().setDrawingCacheEnabled(true);
         }
 
         @Override
         public void callActivityOnCreate(Activity activity, Bundle bundle) {
+            Log.d("Instrumentation", "callActivityOnCreate" + activity.getComponentName().toString());
             initThread(activity);
             super.callActivityOnCreate(activity, bundle);
         }
@@ -123,6 +125,7 @@ public class PhoneReplay extends Activity {
 
         @Override
         public void callActivityOnStart(Activity activity) {
+            Log.d("Instrumentation", "callActivityOnStart" + activity.getComponentName().toString());
             initThread(activity);
             Window window = activity.getWindow();
 
