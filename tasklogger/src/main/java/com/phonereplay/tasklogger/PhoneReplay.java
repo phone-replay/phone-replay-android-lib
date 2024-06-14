@@ -19,23 +19,23 @@ public class PhoneReplay extends Activity {
     private static PhoneReplayApi phoneReplayApi;
     @SuppressLint("StaticFieldLeak")
     private static PhoneReplay sInstance;
-    private final Context mAppContext;
+    private final Context context;
     private Activity currentActivity;
     private int previousWidth;
     private int previousHeight;
 
-    public PhoneReplay(Context appContext, String accessKey) {
-        mAppContext = appContext;
-        phoneReplayApi = new PhoneReplayApi(appContext, accessKey);
+    private PhoneReplay(String accessKey) {
+        context = AppContext.getContext();
+        phoneReplayApi = new PhoneReplayApi(context, accessKey);
     }
 
-    public static void init(Context application, String accessKey) {
-        PhoneReplay.getInstance(application, accessKey).attachBaseContext();
+    public static void init(String accessKey) {
+        PhoneReplay.getInstance(accessKey).attachBaseContext();
     }
 
-    public synchronized static PhoneReplay getInstance(final Context appContext, String accessKey) {
+    public synchronized static PhoneReplay getInstance(String accessKey) {
         if (sInstance == null) {
-            sInstance = new PhoneReplay(appContext, accessKey);
+            sInstance = new PhoneReplay(accessKey);
         }
         return sInstance;
     }
@@ -54,7 +54,7 @@ public class PhoneReplay extends Activity {
 
     public void setCurrentActivity(Activity activity) {
         this.currentActivity = activity;
-        PhoneReplayApi.setCurrentActivity(activity); // Adicione esta linha
+        PhoneReplayApi.setCurrentActivity(activity);
     }
 
     private void replaceInstrumentation(Context contextImpl) {
@@ -68,7 +68,7 @@ public class PhoneReplay extends Activity {
     private void attachBaseContext() {
         phoneReplayApi.initThread();
         phoneReplayApi.initHandler();
-        Context contextImpl = getContextImpl(mAppContext);
+        Context contextImpl = getContextImpl(context);
         replaceInstrumentation(contextImpl);
     }
 
@@ -150,7 +150,6 @@ public class PhoneReplay extends Activity {
             }
             Log.d("YourClassName", "Screen width: " + displayMetrics.widthPixels + ", height: " + displayMetrics.heightPixels);
         }
-
 
         @Override
         public void callActivityOnResume(Activity activity) {
