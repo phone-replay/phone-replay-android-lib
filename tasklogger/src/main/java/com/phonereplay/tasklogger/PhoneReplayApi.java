@@ -160,10 +160,15 @@ public class PhoneReplayApi {
                         public void run() {
                             if (startRecording) {
                                 try {
-                                    Bitmap bitmap = currentView.getDrawingCache();
-                                    //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
-                                    apiClientService.queueBytesBitmap(bitmap, true);
-                                    currentView.destroyDrawingCache();
+                                    if (currentView != null) {
+                                        currentView.setDrawingCacheEnabled(true);
+                                        Bitmap bitmap = currentView.getDrawingCache();
+                                        //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
+                                        apiClientService.queueBytesBitmap(bitmap, true);
+                                        currentView.destroyDrawingCache();
+                                    } else {
+                                        System.err.println("Error: currentView is null");
+                                    }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -180,5 +185,6 @@ public class PhoneReplayApi {
             }
         };
     }
+
 }
 
