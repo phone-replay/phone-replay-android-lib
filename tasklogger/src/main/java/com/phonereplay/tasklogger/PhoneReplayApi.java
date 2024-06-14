@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 
-import com.phonereplay.tasklogger.exception.MyExceptionHandler;
 import com.phonereplay.tasklogger.service.PhoneReplayService;
 
 import java.io.IOException;
@@ -43,10 +42,10 @@ public class PhoneReplayApi {
     private View currentView;
 
     public PhoneReplayApi(Context context, String accessKey) {
-        apiClientService = new PhoneReplayService();
-        projectKey = accessKey;
-        Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
+        //Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
         PhoneReplayApi.context = context;
+        projectKey = accessKey;
+        apiClientService = new PhoneReplayService();
     }
 
     public static StopwatchUtility getStopwatch() {
