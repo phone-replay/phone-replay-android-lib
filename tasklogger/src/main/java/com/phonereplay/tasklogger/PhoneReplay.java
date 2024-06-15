@@ -112,6 +112,12 @@ public class PhoneReplay extends Activity {
             initView(activity);
         }
 
+        @Override
+        public void onCreate(Bundle arguments) {
+            Log.d("TaskLoggerInstrumentation", "onCreate called with activity: " + arguments.toString());
+            super.onCreate(arguments);
+        }
+
         private void initView(Activity activity) {
             Log.d("TaskLoggerInstrumentation", "initView called with activity: " + activity.getClass().getSimpleName());
             phoneReplayApi.setCurrentView(activity.getWindow().getDecorView());
