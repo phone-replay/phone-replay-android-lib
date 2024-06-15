@@ -17,18 +17,22 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.phonereplay.frankenstein_app.databinding.ActivityMainBinding;
 import com.phonereplay.tasklogger.PhoneReplayApi;
 import com.phonereplay.tasklogger.StopwatchUtility;
+import com.smartlook.android.core.api.Smartlook;
 
 public class MainActivity extends AppCompatActivity implements StopwatchUtility.StopwatchListener {
     private static final int SCREEN_RECORD_REQUEST_CODE = 777;
     ActivityMainBinding binding;
+    Smartlook smartlookInstance = Smartlook.getInstance();
     private NoteViewModel noteViewModel;
     private TextView textViewTimer;
 
     public void startMethods() {
+        //smartlookInstance.start();
         PhoneReplayApi.startRecording();
     }
 
     public void stopMethods() {
+        //smartlookInstance.stop();
         PhoneReplayApi.stopRecording();
     }
 

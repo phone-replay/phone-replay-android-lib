@@ -8,9 +8,10 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        PhoneReplay.init(this, "55840540423a2256372b3f00304f01f735f695bb");
+        PhoneReplay.init("9829270026e0d6bb6eb3144225dd93deef6eb3c8");
+
 
         //Smartlook smartlook = Smartlook.getInstance();
-        //smartlook.getPreferences().setProjectKey("9a64208df2a90714d0c6744ee7604df64ac98914");
+        //smartlook.getPreferences().setProjectKey("d5e67b16d758bcc7b3aae16f9485b9826469b244");
     }
 }

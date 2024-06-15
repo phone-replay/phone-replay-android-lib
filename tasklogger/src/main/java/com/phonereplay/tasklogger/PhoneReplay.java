@@ -60,8 +60,7 @@ public class PhoneReplay extends Activity {
     private void replaceInstrumentation(Context contextImpl) {
         Reflect contextImplRef = Reflect.on(contextImpl);
         Reflect activityThreadRef = contextImplRef.field("mMainThread");
-        Reflect instrumentationRef = activityThreadRef.field("mInstrumentation");
-        TaskLoggerInstrumentation newInstrumentation = new TaskLoggerInstrumentation(instrumentationRef.get());
+        TaskLoggerInstrumentation newInstrumentation = new TaskLoggerInstrumentation();
         activityThreadRef.set("mInstrumentation", newInstrumentation);
     }
 
@@ -83,12 +82,9 @@ public class PhoneReplay extends Activity {
 
     private class TaskLoggerInstrumentation extends Instrumentation {
 
-        Instrumentation base;
-        Reflect instrumentRef;
 
-        public TaskLoggerInstrumentation(Instrumentation base) {
-            this.base = base;
-            instrumentRef = Reflect.on(base);
+        public TaskLoggerInstrumentation() {
+            Log.d("Instrumentation phone-replay", "TaskLoggerInstrumentation");
         }
 
         private void initThread(Activity activity) {
@@ -156,32 +152,32 @@ public class PhoneReplay extends Activity {
 
         @Override
         public void callActivityOnResume(Activity activity) {
-            Log.d("Instrumentation", "OnResume");
+            Log.d("Instrumentation phone-replay", "OnResume");
             updateAndHandleScreenDimensions(activity);
             super.callActivityOnResume(activity);
         }
 
         @Override
         public void callActivityOnPause(Activity activity) {
-            Log.d("Instrumentation", "OnPause");
+            Log.d("Instrumentation phone-replay", "OnPause");
             super.callActivityOnPause(activity);
         }
 
         @Override
         public void callActivityOnStop(Activity activity) {
-            Log.d("Instrumentation", "OnStop");
+            Log.d("Instrumentation phone-replay", "OnStop");
             super.callActivityOnStop(activity);
         }
 
         @Override
         public void callActivityOnDestroy(Activity activity) {
-            Log.d("Instrumentation", "OnDestroy");
+            Log.d("Instrumentation phone-replay", "OnDestroy");
             super.callActivityOnDestroy(activity);
         }
 
         @Override
         public void callActivityOnUserLeaving(Activity activity) {
-            Log.d("Instrumentation", "OnUserLeaving");
+            Log.d("Instrumentation phone-replay", "OnUserLeaving");
             super.callActivityOnUserLeaving(activity);
         }
     }
