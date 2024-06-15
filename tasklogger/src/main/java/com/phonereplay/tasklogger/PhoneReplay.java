@@ -27,20 +27,25 @@ public class PhoneReplay extends Activity {
     private PhoneReplay(String accessKey) {
         context = AppContext.getContext();
         phoneReplayApi = new PhoneReplayApi(context, accessKey);
+        Log.d("PhoneReplay", "PhoneReplay constructor called");
     }
 
     public static void init(String accessKey) {
+        Log.d("PhoneReplay", "init called");
         PhoneReplay.getInstance(accessKey).attachBaseContext();
     }
 
     public synchronized static PhoneReplay getInstance(String accessKey) {
         if (sInstance == null) {
             sInstance = new PhoneReplay(accessKey);
+            Log.d("PhoneReplay", "getInstance: new instance created");
         }
+        Log.d("PhoneReplay", "getInstance called");
         return sInstance;
     }
 
     private void updateDimensions(int width, int height) {
+        Log.d("PhoneReplay", "updateDimensions called with width: " + width + " and height: " + height);
         if (previousWidth != 0) {
             phoneReplayApi.orientation = true;
         }
@@ -49,22 +54,27 @@ public class PhoneReplay extends Activity {
     }
 
     public Activity getCurrentActivity() {
+        Log.d("PhoneReplay", "getCurrentActivity called");
         return currentActivity;
     }
 
     public void setCurrentActivity(Activity activity) {
+        Log.d("PhoneReplay", "setCurrentActivity called with activity: " + activity.getClass().getSimpleName());
         this.currentActivity = activity;
         PhoneReplayApi.setCurrentActivity(activity);
     }
 
     private void replaceInstrumentation(Context contextImpl) {
+        Log.d("PhoneReplay", "replaceInstrumentation called");
         Reflect contextImplRef = Reflect.on(contextImpl);
         Reflect activityThreadRef = contextImplRef.field("mMainThread");
-        TaskLoggerInstrumentation newInstrumentation = new TaskLoggerInstrumentation();
+        Reflect instrumentationRef = activityThreadRef.field("mInstrumentation");
+        TaskLoggerInstrumentation newInstrumentation = new TaskLoggerInstrumentation(instrumentationRef.get());
         activityThreadRef.set("mInstrumentation", newInstrumentation);
     }
 
     private void attachBaseContext() {
+        Log.d("PhoneReplay", "attachBaseContext called");
         phoneReplayApi.initThread();
         phoneReplayApi.initHandler();
         Context contextImpl = getContextImpl(context);
@@ -72,6 +82,7 @@ public class PhoneReplay extends Activity {
     }
 
     private Context getContextImpl(Context context) {
+        Log.d("PhoneReplay", "getContextImpl called");
         Context nextContext;
         while ((context instanceof ContextWrapper) &&
                 (nextContext = ((ContextWrapper) context).getBaseContext()) != null) {
@@ -82,12 +93,17 @@ public class PhoneReplay extends Activity {
 
     private class TaskLoggerInstrumentation extends Instrumentation {
 
+        Instrumentation base;
+        Reflect instrumentRef;
 
-        public TaskLoggerInstrumentation() {
-            Log.d("Instrumentation phone-replay", "TaskLoggerInstrumentation");
+        public TaskLoggerInstrumentation(Instrumentation base) {
+            Log.d("TaskLoggerInstrumentation", "Constructor called");
+            this.base = base;
+            instrumentRef = Reflect.on(base);
         }
 
         private void initThread(Activity activity) {
+            Log.d("TaskLoggerInstrumentation", "initThread called with activity: " + activity.getClass().getSimpleName());
             if (!activity.equals(getCurrentActivity())) {
                 phoneReplayApi.getmHandler().removeCallbacks(phoneReplayApi.getThread());
                 phoneReplayApi.getmHandler().postDelayed(phoneReplayApi.getThread(), 100);
@@ -97,31 +113,33 @@ public class PhoneReplay extends Activity {
         }
 
         private void initView(Activity activity) {
-            Log.d("Instrumentation", "initView" + activity.getComponentName().toString());
+            Log.d("TaskLoggerInstrumentation", "initView called with activity: " + activity.getClass().getSimpleName());
             phoneReplayApi.setCurrentView(activity.getWindow().getDecorView());
             phoneReplayApi.getCurrentView().setDrawingCacheEnabled(true);
         }
 
         @Override
         public void callActivityOnCreate(Activity activity, Bundle bundle) {
-            Log.d("Instrumentation", "callActivityOnCreate" + activity.getComponentName().toString());
+            Log.d("TaskLoggerInstrumentation", "callActivityOnCreate called with activity: " + activity.getClass().getSimpleName());
             initThread(activity);
             super.callActivityOnCreate(activity, bundle);
         }
 
         @Override
         public void callActivityOnNewIntent(Activity activity, Intent intent) {
+            Log.d("TaskLoggerInstrumentation", "callActivityOnNewIntent called with activity: " + activity.getClass().getSimpleName());
             super.callActivityOnNewIntent(activity, intent);
         }
 
         @Override
         public void callActivityOnRestart(Activity activity) {
+            Log.d("TaskLoggerInstrumentation", "callActivityOnRestart called with activity: " + activity.getClass().getSimpleName());
             super.callActivityOnRestart(activity);
         }
 
         @Override
         public void callActivityOnStart(Activity activity) {
-            Log.d("Instrumentation", "callActivityOnStart" + activity.getComponentName().toString());
+            Log.d("TaskLoggerInstrumentation", "callActivityOnStart called with activity: " + activity.getClass().getSimpleName());
             initThread(activity);
             Window window = activity.getWindow();
 
@@ -137,6 +155,7 @@ public class PhoneReplay extends Activity {
          * @param activity The current Activity context to get display metrics.
          */
         public void updateAndHandleScreenDimensions(Activity activity) {
+            Log.d("TaskLoggerInstrumentation", "updateAndHandleScreenDimensions called with activity: " + activity.getClass().getSimpleName());
             DisplayMetrics displayMetrics = new DisplayMetrics();
             // Use activity's context to get the WindowManager
             activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -147,37 +166,37 @@ public class PhoneReplay extends Activity {
                 updateDimensions(displayMetrics.widthPixels, displayMetrics.heightPixels); // Update stored dimensions
                 // Add your logic to handle the resolution change
             }
-            Log.d("YourClassName", "Screen width: " + displayMetrics.widthPixels + ", height: " + displayMetrics.heightPixels);
+            Log.d("TaskLoggerInstrumentation", "Screen width: " + displayMetrics.widthPixels + ", height: " + displayMetrics.heightPixels);
         }
 
         @Override
         public void callActivityOnResume(Activity activity) {
-            Log.d("Instrumentation phone-replay", "OnResume");
+            Log.d("TaskLoggerInstrumentation", "callActivityOnResume called with activity: " + activity.getClass().getSimpleName());
             updateAndHandleScreenDimensions(activity);
             super.callActivityOnResume(activity);
         }
 
         @Override
         public void callActivityOnPause(Activity activity) {
-            Log.d("Instrumentation phone-replay", "OnPause");
+            Log.d("TaskLoggerInstrumentation", "callActivityOnPause called with activity: " + activity.getClass().getSimpleName());
             super.callActivityOnPause(activity);
         }
 
         @Override
         public void callActivityOnStop(Activity activity) {
-            Log.d("Instrumentation phone-replay", "OnStop");
+            Log.d("TaskLoggerInstrumentation", "callActivityOnStop called with activity: " + activity.getClass().getSimpleName());
             super.callActivityOnStop(activity);
         }
 
         @Override
         public void callActivityOnDestroy(Activity activity) {
-            Log.d("Instrumentation phone-replay", "OnDestroy");
+            Log.d("TaskLoggerInstrumentation", "callActivityOnDestroy called with activity: " + activity.getClass().getSimpleName());
             super.callActivityOnDestroy(activity);
         }
 
         @Override
         public void callActivityOnUserLeaving(Activity activity) {
-            Log.d("Instrumentation phone-replay", "OnUserLeaving");
+            Log.d("TaskLoggerInstrumentation", "callActivityOnUserLeaving called with activity: " + activity.getClass().getSimpleName());
             super.callActivityOnUserLeaving(activity);
         }
     }
