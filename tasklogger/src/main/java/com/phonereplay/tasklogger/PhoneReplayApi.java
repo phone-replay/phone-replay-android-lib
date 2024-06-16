@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
-import com.phonereplay.tasklogger.utils.BitmapUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,7 +75,6 @@ public class PhoneReplayApi {
         Activity mainActivity = MainActivityFetcher.getMainActivity();
         assert mainActivity != null;
         initThread(mainActivity);
-        /*
         new Thread(() -> {
             boolean validateAccessKey = apiClientService.validateAccessKey(projectKey);
             if (validateAccessKey) {
@@ -87,8 +85,6 @@ public class PhoneReplayApi {
                 startCountUp();
             }
         }).start();
-         */
-
     }
 
     public static void stopRecording() {
@@ -160,13 +156,6 @@ public class PhoneReplayApi {
             currentView = activity.getWindow().getDecorView();
             Log.d(TAG, "DecorView set as current view");
         }
-
-        if (currentView != null) {
-            currentView.setDrawingCacheEnabled(true);
-            currentView.getViewTreeObserver().addOnGlobalLayoutListener(() -> captureViewBitmap(currentView));
-        } else {
-            Log.e(TAG, "Current view is null");
-        }
     }
 
     private static byte[] writeImageFromBitmap(Bitmap bitmap) {
@@ -223,7 +212,8 @@ public class PhoneReplayApi {
                                 try {
                                     if (currentView != null) {
                                         currentView.setDrawingCacheEnabled(true);
-                                        Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
+                                        Bitmap bitmap = currentView.getDrawingCache();
+                                        //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
                                         apiClientService.queueBytesBitmap(bitmap, true);
                                         currentView.destroyDrawingCache();
                                     } else {
