@@ -1,5 +1,6 @@
 package com.phonereplay.tasklogger;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Context;
@@ -12,16 +13,20 @@ import android.view.Window;
 
 import com.phonereplay.tasklogger.reflect.Reflect;
 
-public class PhoneReplay extends Activity {
+import io.flutter.embedding.android.FlutterActivity;
 
+public class PhoneReplayFlutter extends FlutterActivity {
+
+    @SuppressLint("StaticFieldLeak")
     private static PhoneReplayApi phoneReplayApi;
-    private static PhoneReplay sInstance;
+    @SuppressLint("StaticFieldLeak")
+    private static PhoneReplayFlutter sInstance;
     private final Context context;
     private Activity currentActivity;
     private int previousWidth;
     private int previousHeight;
 
-    private PhoneReplay(String accessKey) {
+    private PhoneReplayFlutter(String accessKey) {
         context = AppContext.getContext();
         phoneReplayApi = new PhoneReplayApi(context, accessKey);
         Log.d("PhoneReplay", "PhoneReplay constructor called");
@@ -29,16 +34,58 @@ public class PhoneReplay extends Activity {
 
     public static void init(String accessKey) {
         Log.d("PhoneReplay", "init called");
-        PhoneReplay.getInstance(accessKey).attachBaseContext();
+        PhoneReplayFlutter.getInstance(accessKey).attachBaseContext();
     }
 
-    public synchronized static PhoneReplay getInstance(String accessKey) {
+    public synchronized static PhoneReplayFlutter getInstance(String accessKey) {
         if (sInstance == null) {
-            sInstance = new PhoneReplay(accessKey);
+            sInstance = new PhoneReplayFlutter(accessKey);
             Log.d("PhoneReplay", "getInstance: new instance created");
         }
         Log.d("PhoneReplay", "getInstance called");
         return sInstance;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("MyFlutterActivity", "onCreate called");
+        // Adicione o que você deseja fazer aqui
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("MyFlutterActivity", "onStart called");
+        // Adicione o que você deseja fazer aqui
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("MyFlutterActivity", "onResume called");
+        // Adicione o que você deseja fazer aqui
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("MyFlutterActivity", "onPause called");
+        // Adicione o que você deseja fazer aqui
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("MyFlutterActivity", "onStop called");
+        // Adicione o que você deseja fazer aqui
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("MyFlutterActivity", "onDestroy called");
+        // Adicione o que você deseja fazer aqui
     }
 
     private void updateDimensions(int width, int height) {
@@ -107,12 +154,6 @@ public class PhoneReplay extends Activity {
                 setCurrentActivity(activity);
             }
             initView(activity);
-        }
-
-        @Override
-        public void onCreate(Bundle arguments) {
-            Log.d("TaskLoggerInstrumentation", "onCreate called with activity: " + arguments.toString());
-            super.onCreate(arguments);
         }
 
         private void initView(Activity activity) {
