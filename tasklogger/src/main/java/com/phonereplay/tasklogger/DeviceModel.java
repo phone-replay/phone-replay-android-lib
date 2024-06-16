@@ -37,4 +37,60 @@ public class DeviceModel {
         this.screenResolution = DeviceInfo.getScreenResolution(context);
         this.platform = "Android";
     }
+
+    public String getManufacturer() {
+        return manufacturer;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public String getDevice() {
+        return device;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public String getOsVersion() {
+        return osVersion;
+    }
+
+    public int getSdkVersion() {
+        return sdkVersion;
+    }
+
+    public String getInstallID() {
+        return installID;
+    }
+
+    public String getTotalStorage() {
+        return totalStorage;
+    }
+
+    public String getTotalRAM() {
+        return totalRAM;
+    }
+
+    public String getCurrentNetwork() {
+        return currentNetwork;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public float getBatteryLevel() {
+        return batteryLevel;
+    }
+
+    public String getScreenResolution() {
+        return screenResolution;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
 }

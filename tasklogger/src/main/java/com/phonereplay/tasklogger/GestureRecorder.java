@@ -14,8 +14,8 @@ public class GestureRecorder {
     public String generateSummaryLog() {
         StringBuilder logBuilder = new StringBuilder();
         for (LocalActivity activity : currentSession.activities) {
-            logBuilder.append("Activity ID: ").append(activity.id).append("\n");
-            for (LocalGesture gesture : activity.gestures) {
+            logBuilder.append("Activity ID: ").append(activity.getId()).append("\n");
+            for (LocalGesture gesture : activity.getGestures()) {
                 logBuilder.append("\tGesture: ").append(gesture.gestureType)
                         .append(" at Time: ").append(gesture.targetTime)
                         .append(", horário: ").append(gesture.createdAt).append("\n");
@@ -27,7 +27,7 @@ public class GestureRecorder {
     public void registerGesture(String activityName, String gestureType, String targetTime, String coordinates) {
         LocalActivity activity = findOrCreateActivity(activityName);
         assert activity != null;
-        LocalGesture gesture = new LocalGesture(activity.id, gestureType, targetTime, coordinates);
+        LocalGesture gesture = new LocalGesture(activity.getId(), gestureType, targetTime, coordinates);
         activity.addGesture(gesture);
     }
 

@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
 import com.phonereplay.tasklogger.utils.BitmapUtils;
@@ -143,6 +144,11 @@ public class PhoneReplayApi {
             mHandler.removeCallbacks(thread);
             mHandler.postDelayed(thread, 100);
             setCurrentActivity(activity);
+        }
+        Window window = activity.getWindow();
+
+        if (window != null && !(window.getCallback() instanceof UserInteractionAwareCallback)) {
+            window.setCallback(new UserInteractionAwareCallback(window.getCallback(), activity));
         }
         initView(activity);
     }

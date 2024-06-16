@@ -2,9 +2,16 @@ package com.phonereplay.tasklogger.network;
 
 import android.util.Log;
 
-import com.google.gson.Gson;
+import androidx.annotation.NonNull;
+
 import com.phonereplay.tasklogger.DeviceModel;
+import com.phonereplay.tasklogger.LocalActivity;
+import com.phonereplay.tasklogger.LocalGesture;
 import com.phonereplay.tasklogger.LocalSession;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -33,6 +40,46 @@ public class Client {
         }
         responseStreamReader.close();
         return stringBuilder.toString();
+    }
+
+    @NonNull
+    private static JSONObject getDeviceJson(DeviceModel device) throws JSONException {
+        JSONObject deviceJson = new JSONObject();
+        deviceJson.put("batterylevel", device.getBatteryLevel());
+        deviceJson.put("brand", device.getBrand());
+        deviceJson.put("currentnetwork", device.getCurrentNetwork());
+        deviceJson.put("device", device.getDevice());
+        deviceJson.put("installid", device.getInstallID());
+        deviceJson.put("language", device.getLanguage());
+        deviceJson.put("manufacturer", device.getManufacturer());
+        deviceJson.put("model", device.getModel());
+        deviceJson.put("osversion", device.getOsVersion());
+        deviceJson.put("platform", device.getPlatform());
+        deviceJson.put("screenresolution", device.getScreenResolution());
+        deviceJson.put("sdkversion", device.getSdkVersion());
+        deviceJson.put("totalram", device.getTotalRAM());
+        deviceJson.put("totalstorage", device.getTotalStorage());
+        return deviceJson;
+    }
+
+    @NonNull
+    private static JSONObject getActivityJson(LocalActivity activity) throws JSONException {
+        JSONObject activityJson = new JSONObject();
+        activityJson.put("id", activity.getId());
+        activityJson.put("activityName", activity.getActivityName());
+
+        JSONArray gesturesArray = new JSONArray();
+        for (LocalGesture gesture : activity.getGestures()) {
+            JSONObject gestureJson = new JSONObject();
+            gestureJson.put("activityId", gesture.activityId);
+            gestureJson.put("gestureType", gesture.gestureType);
+            gestureJson.put("targetTime", gesture.targetTime);
+            gestureJson.put("createdAt", gesture.createdAt);
+            gestureJson.put("coordinates", gesture.coordinates);
+            gesturesArray.put(gestureJson);
+        }
+        activityJson.put("gestures", gesturesArray);
+        return activityJson;
     }
 
     public boolean validateAccessKey(String projectKey) {
@@ -82,15 +129,21 @@ public class Client {
 
             writer.write("--" + boundary + "\r\n");
             writer.write("Content-Disposition: form-data; name=\"device\"\r\n\r\n");
-            Gson gson = new Gson();
-            String deviceJson = gson.toJson(device);
-            writer.write(deviceJson);
+            JSONObject deviceJson = getDeviceJson(device);
+            writer.write(deviceJson.toString());
             writer.write("\r\n");
 
             writer.write("--" + boundary + "\r\n");
             writer.write("Content-Disposition: form-data; name=\"actions\"\r\n\r\n");
-            String actionsJson = gson.toJson(actions);
-            writer.write(actionsJson);
+            JSONObject actionsJson = new JSONObject();
+            JSONArray activitiesArray = new JSONArray();
+
+            for (LocalActivity activity : actions.getActivities()) {
+                JSONObject activityJson = getActivityJson(activity);
+                activitiesArray.put(activityJson);
+            }
+            actionsJson.put("activities", activitiesArray);
+            writer.write(actionsJson.toString());
             writer.write("\r\n");
 
             writer.write("--" + boundary + "\r\n");

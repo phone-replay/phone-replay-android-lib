@@ -62,8 +62,6 @@ publishing {
 
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.10.1'
-
     debugImplementation 'com.phone_replay.flutter_module:flutter_debug:1.0'
     profileImplementation 'com.phone_replay.flutter_module:flutter_profile:1.0'
     releaseImplementation 'com.phone_replay.flutter_module:flutter_release:1.0'
