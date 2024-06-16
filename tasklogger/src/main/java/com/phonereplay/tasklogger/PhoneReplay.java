@@ -1,13 +1,13 @@
 package com.phonereplay.tasklogger;
 
 import android.app.Activity;
-import android.app.Instrumentation;
+import android.app.Application;
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.phonereplay.tasklogger.reflect.Reflect;
 
@@ -16,27 +16,36 @@ public class PhoneReplay extends Activity {
     private static PhoneReplayApi phoneReplayApi;
     private static PhoneReplay sInstance;
     private final Context context;
+    private final ActivityLifecycleCallbacks callbacks = new ActivityLifecycleCallbacks();
     private Activity currentActivity;
     private int previousWidth;
     private int previousHeight;
 
-    private PhoneReplay(String accessKey) {
+    private PhoneReplay(String accessKey, Application application) {
         context = AppContext.getContext();
         phoneReplayApi = new PhoneReplayApi(context, accessKey);
+        application.registerActivityLifecycleCallbacks(callbacks);
         Log.d("PhoneReplay", "PhoneReplay constructor called");
     }
 
-    public static void init(String accessKey) {
+    public static void init(String accessKey, Application application) {
         Log.d("PhoneReplay", "init called");
-        PhoneReplay.getInstance(accessKey).attachBaseContext();
+        PhoneReplay.getInstance(accessKey, application).attachBaseContext();
     }
 
-    public synchronized static PhoneReplay getInstance(String accessKey) {
+    public synchronized static PhoneReplay getInstance(String accessKey, Application application) {
         if (sInstance == null) {
-            sInstance = new PhoneReplay(accessKey);
+            sInstance = new PhoneReplay(accessKey, application);
             Log.d("PhoneReplay", "getInstance: new instance created");
         }
         Log.d("PhoneReplay", "getInstance called");
+        return sInstance;
+    }
+
+    public synchronized static PhoneReplay getInstance() {
+        if (sInstance == null) {
+            throw new IllegalStateException("PhoneReplay is not initialized. Call init() first.");
+        }
         return sInstance;
     }
 
@@ -65,8 +74,6 @@ public class PhoneReplay extends Activity {
         Reflect contextImplRef = Reflect.on(contextImpl);
         Reflect activityThreadRef = contextImplRef.field("mMainThread");
         Reflect instrumentationRef = activityThreadRef.field("mInstrumentation");
-        TaskLoggerInstrumentation newInstrumentation = new TaskLoggerInstrumentation(instrumentationRef.get());
-        activityThreadRef.set("mInstrumentation", newInstrumentation);
     }
 
     private void attachBaseContext() {
@@ -87,98 +94,52 @@ public class PhoneReplay extends Activity {
         return context;
     }
 
-    private class TaskLoggerInstrumentation extends Instrumentation {
+    public ActivityLifecycleCallbacks getCallbacks() {
+        return callbacks;
+    }
 
-        Instrumentation base;
-        Reflect instrumentRef;
+    public class ActivityLifecycleCallbacks implements Application.ActivityLifecycleCallbacks {
 
-        public TaskLoggerInstrumentation(Instrumentation base) {
-            Log.d("TaskLoggerInstrumentation", "Constructor called");
-            this.base = base;
-            instrumentRef = Reflect.on(base);
-        }
-
+        private static final String TAG = "ActivityLifecycle";
+        private Activity currentActivity;
 
         @Override
-        public void onCreate(Bundle arguments) {
-            Log.d("TaskLoggerInstrumentation", "onCreate called with activity: " + arguments.toString());
-            super.onCreate(arguments);
-        }
-
-
-        @Override
-        public void callActivityOnCreate(Activity activity, Bundle bundle) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnCreate called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnCreate(activity, bundle);
+        public void onActivityCreated(@NonNull Activity activity, Bundle savedInstanceState) {
+            Log.d(TAG, "onActivityCreated: " + activity.getLocalClassName());
         }
 
         @Override
-        public void callActivityOnNewIntent(Activity activity, Intent intent) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnNewIntent called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnNewIntent(activity, intent);
+        public void onActivityStarted(@NonNull Activity activity) {
+            Log.d(TAG, "onActivityStarted: " + activity.getLocalClassName());
         }
 
         @Override
-        public void callActivityOnRestart(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnRestart called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnRestart(activity);
+        public void onActivityResumed(@NonNull Activity activity) {
+            currentActivity = activity;
+            Log.d(TAG, "onActivityResumed: " + activity.getLocalClassName());
         }
 
         @Override
-        public void callActivityOnStart(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnStart called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnStart(activity);
+        public void onActivityPaused(@NonNull Activity activity) {
+            Log.d(TAG, "onActivityPaused: " + activity.getLocalClassName());
         }
 
-        /**
-         * Method to update and handle screen dimensions.
-         *
-         * @param activity The current Activity context to get display metrics.
-         */
-        public void updateAndHandleScreenDimensions(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "updateAndHandleScreenDimensions called with activity: " + activity.getClass().getSimpleName());
-            DisplayMetrics displayMetrics = new DisplayMetrics();
-            // Use activity's context to get the WindowManager
-            activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-            phoneReplayApi.setMainHeight(displayMetrics.heightPixels, displayMetrics.widthPixels);
-            // Check if dimensions have changed
-            if (displayMetrics.widthPixels != previousWidth || displayMetrics.heightPixels != previousHeight) {
-                // Dimensions have changed, do something here
-                updateDimensions(displayMetrics.widthPixels, displayMetrics.heightPixels); // Update stored dimensions
-                // Add your logic to handle the resolution change
+        @Override
+        public void onActivityStopped(@NonNull Activity activity) {
+            if (currentActivity == activity) {
+                currentActivity = null;
             }
-            Log.d("TaskLoggerInstrumentation", "Screen width: " + displayMetrics.widthPixels + ", height: " + displayMetrics.heightPixels);
+            Log.d(TAG, "onActivityStopped: " + activity.getLocalClassName());
         }
 
         @Override
-        public void callActivityOnResume(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnResume called with activity: " + activity.getClass().getSimpleName());
-            updateAndHandleScreenDimensions(activity);
-            super.callActivityOnResume(activity);
+        public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
+            Log.d(TAG, "onActivitySaveInstanceState: " + activity.getLocalClassName());
         }
 
         @Override
-        public void callActivityOnPause(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnPause called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnPause(activity);
-        }
-
-        @Override
-        public void callActivityOnStop(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnStop called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnStop(activity);
-        }
-
-        @Override
-        public void callActivityOnDestroy(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnDestroy called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnDestroy(activity);
-        }
-
-        @Override
-        public void callActivityOnUserLeaving(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "callActivityOnUserLeaving called with activity: " + activity.getClass().getSimpleName());
-            super.callActivityOnUserLeaving(activity);
+        public void onActivityDestroyed(@NonNull Activity activity) {
+            Log.d(TAG, "onActivityDestroyed: " + activity.getLocalClassName());
         }
     }
 }
