@@ -17,8 +17,16 @@ public class MainActivityFetcher {
             activitiesField.setAccessible(true);
 
             Map<Object, Object> activities = (Map<Object, Object>) activitiesField.get(activityThread);
-            if (activities == null)
+
+            if (activities == null) {
+                Log.d(TAG, "activities is null");
                 return null;
+            } else {
+                Log.d(TAG, "activities size: " + activities.size());
+                for (Map.Entry<Object, Object> entry : activities.entrySet()) {
+                    Log.d(TAG, "Key: " + entry.getKey() + ", Value: " + entry.getValue());
+                }
+            }
 
             for (Object activityRecord : activities.values()) {
                 Class<?> activityRecordClass = activityRecord.getClass();
