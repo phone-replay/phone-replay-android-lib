@@ -4,15 +4,22 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Handler;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
 import com.phonereplay.tasklogger.utils.BitmapUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterView;
 
 public class PhoneReplayApi {
 
@@ -69,6 +76,7 @@ public class PhoneReplayApi {
         Activity mainActivity = MainActivityFetcher.getMainActivity();
         assert mainActivity != null;
         initThread(mainActivity);
+        /*
         new Thread(() -> {
             boolean validateAccessKey = apiClientService.validateAccessKey(projectKey);
             if (validateAccessKey) {
@@ -79,6 +87,8 @@ public class PhoneReplayApi {
                 startCountUp();
             }
         }).start();
+         */
+
     }
 
     public static void stopRecording() {
@@ -126,25 +136,61 @@ public class PhoneReplayApi {
     }
 
     private static void initView(Activity activity) {
-        setCurrentView(activity.getWindow().getDecorView());
-        getCurrentView().setDrawingCacheEnabled(true);
+        String TAG = "initView";
+
+        Log.d(TAG, "Initializing view for activity: " + activity.getClass().getName());
+        if (activity instanceof FlutterActivity) {
+            FlutterActivity flutterActivity = (FlutterActivity) activity;
+            ViewGroup rootView = (ViewGroup) flutterActivity.findViewById(android.R.id.content);
+            if (rootView != null) {
+                Log.d(TAG, "Root view found with child count: " + rootView.getChildCount());
+                for (int i = 0; i < rootView.getChildCount(); i++) {
+                    View child = rootView.getChildAt(i);
+                    Log.d(TAG, "Child view at index " + i + ": " + child.getClass().getName());
+                    if (child instanceof FlutterView) {
+                        currentView = child;
+                        Log.d(TAG, "FlutterView found and set as current view");
+                        break;
+                    }
+                }
+            } else {
+                Log.e(TAG, "Root view is null");
+            }
+        } else {
+            currentView = activity.getWindow().getDecorView();
+            Log.d(TAG, "DecorView set as current view");
+        }
+
+        if (currentView != null) {
+            currentView.setDrawingCacheEnabled(true);
+            currentView.getViewTreeObserver().addOnGlobalLayoutListener(() -> captureViewBitmap(currentView));
+        } else {
+            Log.e(TAG, "Current view is null");
+        }
     }
 
-    public static View getCurrentView() {
-        return currentView;
+    private static byte[] writeImageFromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 1, byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
     }
 
-    public static void setCurrentView(View currentView) {
-        PhoneReplayApi.currentView = currentView;
+    private static void captureViewBitmap(View view) {
+        try {
+            Bitmap currentBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(currentBitmap);
+            view.draw(canvas);
+
+            byte[] a = writeImageFromBitmap(currentBitmap);
+            String base64String = Base64.encodeToString(a, Base64.DEFAULT);
+            Log.d("captureViewBitmap", "base64String " + base64String);
+        } catch (Exception e) {
+            Log.e("captureViewBitmap", "Failed to capture bitmap", e);
+        }
     }
 
     private static void initThread(Activity activity) {
         Log.d("TaskLoggerInstrumentation", "initThread called with activity: " + activity.getClass().getSimpleName());
-        if (!activity.equals(currentActivity)) {
-            mHandler.removeCallbacks(thread);
-            mHandler.postDelayed(thread, 100);
-            setCurrentActivity(activity);
-        }
         Window window = activity.getWindow();
 
         if (window != null && !(window.getCallback() instanceof UserInteractionAwareCallback)) {
