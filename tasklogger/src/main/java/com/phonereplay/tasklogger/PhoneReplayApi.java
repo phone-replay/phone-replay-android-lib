@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
+import com.phonereplay.tasklogger.utils.BitmapUtils;
 
 import java.io.IOException;
 
@@ -36,10 +37,10 @@ public class PhoneReplayApi {
     private static String projectKey;
     private static long startTime;
     private static long endTime;
+    private static View currentView;
     public boolean orientation = false;
     public int mainHeight = 0;
     public int mainWidth = 0;
-    private View currentView;
 
     public PhoneReplayApi(Context context, String accessKey) {
         //Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
@@ -64,6 +65,9 @@ public class PhoneReplayApi {
     }
 
     public static void startRecording() {
+        Activity mainActivity = MainActivityFetcher.getMainActivity();
+        assert mainActivity != null;
+        initThread(mainActivity);
         new Thread(() -> {
             boolean validateAccessKey = apiClientService.validateAccessKey(projectKey);
             if (validateAccessKey) {
@@ -75,7 +79,6 @@ public class PhoneReplayApi {
             }
         }).start();
     }
-
 
     public static void stopRecording() {
         if (startRecording) {
@@ -121,28 +124,34 @@ public class PhoneReplayApi {
         }
     }
 
+    private static void initView(Activity activity) {
+        setCurrentView(activity.getWindow().getDecorView());
+        getCurrentView().setDrawingCacheEnabled(true);
+    }
+
+    public static View getCurrentView() {
+        return currentView;
+    }
+
+    public static void setCurrentView(View currentView) {
+        PhoneReplayApi.currentView = currentView;
+    }
+
+    private static void initThread(Activity activity) {
+        Log.d("TaskLoggerInstrumentation", "initThread called with activity: " + activity.getClass().getSimpleName());
+        if (!activity.equals(currentActivity)) {
+            mHandler.removeCallbacks(thread);
+            mHandler.postDelayed(thread, 100);
+            setCurrentActivity(activity);
+        }
+        initView(activity);
+    }
+
     public void setMainHeight(int mainHeight, int mainWidth) {
         if (this.mainHeight == 0) {
             this.mainHeight = mainHeight;
             this.mainWidth = mainWidth;
         }
-    }
-
-    public View getCurrentView() {
-        return currentView;
-    }
-
-    public void setCurrentView(View currentView) {
-        this.currentView = currentView;
-        Log.d("ViewLogger", "Current View: " + currentView.toString());
-    }
-
-    public Handler getmHandler() {
-        return mHandler;
-    }
-
-    public Thread getThread() {
-        return thread;
     }
 
     public void initHandler() {
@@ -162,8 +171,7 @@ public class PhoneReplayApi {
                                 try {
                                     if (currentView != null) {
                                         currentView.setDrawingCacheEnabled(true);
-                                        Bitmap bitmap = currentView.getDrawingCache();
-                                        //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
+                                        Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
                                         apiClientService.queueBytesBitmap(bitmap, true);
                                         currentView.destroyDrawingCache();
                                     } else {

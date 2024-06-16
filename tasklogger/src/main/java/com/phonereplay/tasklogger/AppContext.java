@@ -14,14 +14,11 @@ public class AppContext {
     public static Context getContext() {
         if (context == null) {
             try {
-                Log.d(TAG, "Attempting to get application context via reflection.");
                 Class<?> activityThread = Class.forName("android.app.ActivityThread");
                 @SuppressLint("DiscouragedPrivateApi") Method currentApplicationMethod =
                         activityThread.getDeclaredMethod("currentApplication");
                 context = (Context) currentApplicationMethod.invoke(null);
-                Log.d(TAG, "Application context acquired successfully.");
             } catch (Exception e) {
-                Log.e(TAG, "Failed to get application context via reflection", e);
                 throw new IllegalStateException("Failed to get application context via reflection", e);
             }
         } else {

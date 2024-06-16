@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Window;
 
 import com.phonereplay.tasklogger.reflect.Reflect;
 
@@ -99,15 +98,6 @@ public class PhoneReplay extends Activity {
             instrumentRef = Reflect.on(base);
         }
 
-        private void initThread(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "initThread called with activity: " + activity.getClass().getSimpleName());
-            if (!activity.equals(getCurrentActivity())) {
-                phoneReplayApi.getmHandler().removeCallbacks(phoneReplayApi.getThread());
-                phoneReplayApi.getmHandler().postDelayed(phoneReplayApi.getThread(), 100);
-                setCurrentActivity(activity);
-            }
-            initView(activity);
-        }
 
         @Override
         public void onCreate(Bundle arguments) {
@@ -115,16 +105,10 @@ public class PhoneReplay extends Activity {
             super.onCreate(arguments);
         }
 
-        private void initView(Activity activity) {
-            Log.d("TaskLoggerInstrumentation", "initView called with activity: " + activity.getClass().getSimpleName());
-            phoneReplayApi.setCurrentView(activity.getWindow().getDecorView());
-            phoneReplayApi.getCurrentView().setDrawingCacheEnabled(true);
-        }
 
         @Override
         public void callActivityOnCreate(Activity activity, Bundle bundle) {
             Log.d("TaskLoggerInstrumentation", "callActivityOnCreate called with activity: " + activity.getClass().getSimpleName());
-            initThread(activity);
             super.callActivityOnCreate(activity, bundle);
         }
 
@@ -143,12 +127,6 @@ public class PhoneReplay extends Activity {
         @Override
         public void callActivityOnStart(Activity activity) {
             Log.d("TaskLoggerInstrumentation", "callActivityOnStart called with activity: " + activity.getClass().getSimpleName());
-            initThread(activity);
-            Window window = activity.getWindow();
-
-            if (window != null && !(window.getCallback() instanceof UserInteractionAwareCallback)) {
-                window.setCallback(new UserInteractionAwareCallback(window.getCallback(), activity));
-            }
             super.callActivityOnStart(activity);
         }
 
