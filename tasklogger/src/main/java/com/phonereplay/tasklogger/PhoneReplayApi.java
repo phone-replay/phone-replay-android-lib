@@ -80,14 +80,11 @@ public class PhoneReplayApi {
         assert mainActivity != null;
         initThread(mainActivity);
         new Thread(() -> {
-            boolean validateAccessKey = apiClientService.validateAccessKey(projectKey);
-            if (validateAccessKey) {
-                gestureRecorder = new GestureRecorder();
-                startRecording = true;
-                startTime = System.currentTimeMillis();
-                mHandler.postDelayed(thread, RECORDING_INTERVAL);
-                startCountUp();
-            }
+            gestureRecorder = new GestureRecorder();
+            startRecording = true;
+            startTime = System.currentTimeMillis();
+            mHandler.postDelayed(thread, RECORDING_INTERVAL);
+            startCountUp();
         }).start();
     }
 
