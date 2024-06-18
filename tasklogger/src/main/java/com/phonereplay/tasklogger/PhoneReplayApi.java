@@ -6,8 +6,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
+import android.view.PixelCopy;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -16,6 +19,7 @@ import com.phonereplay.tasklogger.service.PhoneReplayService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.android.FlutterView;
@@ -137,7 +141,7 @@ public class PhoneReplayApi {
         Log.d(TAG, "Initializing view for activity: " + activity.getClass().getName());
         if (activity instanceof FlutterActivity) {
             FlutterActivity flutterActivity = (FlutterActivity) activity;
-            ViewGroup rootView = (ViewGroup) flutterActivity.findViewById(android.R.id.content);
+            ViewGroup rootView = flutterActivity.findViewById(android.R.id.content);
             if (rootView != null) {
                 Log.d(TAG, "Root view found with child count: " + rootView.getChildCount());
                 for (int i = 0; i < rootView.getChildCount(); i++) {
@@ -211,11 +215,15 @@ public class PhoneReplayApi {
                             if (startRecording) {
                                 try {
                                     if (currentView != null) {
-                                        currentView.setDrawingCacheEnabled(true);
-                                        Bitmap bitmap = currentView.getDrawingCache();
-                                        //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
-                                        apiClientService.queueBytesBitmap(bitmap, true);
-                                        currentView.destroyDrawingCache();
+                                        Bitmap bitmap;
+                                        bitmap = Bitmap.createBitmap(currentView.getWidth(), currentView.getHeight(), Bitmap.Config.ARGB_8888);
+                                        PixelCopy.request(Objects.requireNonNull(getSurfaceView(currentView)), bitmap, copyResult -> {
+                                            if (copyResult == PixelCopy.SUCCESS) {
+                                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                                logBase64(stream);
+                                            }
+                                        }, new Handler(Looper.getMainLooper()));
                                     } else {
                                         System.err.println("Error: currentView is null");
                                     }
@@ -234,6 +242,27 @@ public class PhoneReplayApi {
                 }
             }
         };
+    }
+
+    private SurfaceView getSurfaceView(View view) {
+        if (view instanceof SurfaceView) {
+            return (SurfaceView) view;
+        } else if (view instanceof ViewGroup) {
+            ViewGroup viewGroup = (ViewGroup) view;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                SurfaceView surfaceView = getSurfaceView(viewGroup.getChildAt(i));
+                if (surfaceView != null) {
+                    return surfaceView;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void logBase64(ByteArrayOutputStream stream) {
+        // Implementation to log the Base64 encoded string of the screenshot
+        String base64String = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT);
+        Log.d("Screenshot", base64String);
     }
 
 }
