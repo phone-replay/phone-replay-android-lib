@@ -36,7 +36,7 @@ public class MainActivityFetcher {
                     }
                 }
             }
-
+//
             for (Object activityRecord : activities.values()) {
                 Class<?> activityRecordClass = activityRecord.getClass();
                 Field activityField = activityRecordClass.getDeclaredField("activity");
