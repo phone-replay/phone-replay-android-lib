@@ -216,9 +216,11 @@ public class PhoneReplayApi {
                                         bitmap = Bitmap.createBitmap(currentView.getWidth(), currentView.getHeight(), Bitmap.Config.ARGB_8888);
                                         PixelCopy.request(Objects.requireNonNull(getSurfaceView(currentView)), bitmap, copyResult -> {
                                             if (copyResult == PixelCopy.SUCCESS) {
-                                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                                                logBase64(stream);
+                                                try {
+                                                    apiClientService.queueBytesBitmap(bitmap, true);
+                                                } catch (IOException e) {
+                                                    throw new RuntimeException(e);
+                                                }
                                             }
                                         }, new Handler(Looper.getMainLooper()));
                                     } else {
