@@ -71,12 +71,10 @@ public class PhoneReplayApi {
         return context;
     }
 
-    public static void setCurrentActivity(Activity activity) {
-        currentActivity = activity;
-    }
 
     public static void startRecording() {
         Activity mainActivity = MainActivityFetcher.getMainActivity();
+        currentActivity = mainActivity;
         assert mainActivity != null;
         initThread(mainActivity);
         new Thread(() -> {
@@ -183,16 +181,10 @@ public class PhoneReplayApi {
         Window window = activity.getWindow();
 
         if (window != null && !(window.getCallback() instanceof UserInteractionAwareCallback)) {
+            Log.d("UserInteractionAwareCallback", ": " + activity.getClass().getSimpleName());
             window.setCallback(new UserInteractionAwareCallback(window.getCallback(), activity));
         }
         initView(activity);
-    }
-
-    public void setMainHeight(int mainHeight, int mainWidth) {
-        if (this.mainHeight == 0) {
-            this.mainHeight = mainHeight;
-            this.mainWidth = mainWidth;
-        }
     }
 
     public void initHandler() {
