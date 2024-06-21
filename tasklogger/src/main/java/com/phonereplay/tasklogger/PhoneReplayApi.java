@@ -96,7 +96,6 @@ public class PhoneReplayApi {
             Log.d("timer", stopwatch.timer);
             stopwatch.stop();
 
-            // Calcular a duração da gravação
             long duration = endTime - startTime;
             Log.d("RecordingDuration", "Duração da gravação: " + duration + " milissegundos");
 
