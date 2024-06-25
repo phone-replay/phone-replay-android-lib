@@ -32,19 +32,19 @@ public class PhoneReplay extends Activity {
     private void attachBaseContext() {
         try {
             Activity activity = MainActivityFetcher.getOnlyMainActivity();
+            if (activity instanceof FlutterActivity) {
+                phoneReplayApi = new PhoneReplayApi(context, accessKey, "FLUTTER");
+                Log.d("ActivityInstance", "activity is flutter instance");
+            }
+
             Class<?> flutterActivityClass = Class.forName("io.flutter.embedding.android.FlutterActivity");
 
-            // Log the name of the flutterActivityClass
             Log.d("ActivityInstance", "Class name: " + flutterActivityClass.getName());
 
             if (flutterActivityClass.isInstance(activity)) {
                 Log.d("ActivityInstance", "activity is flutter instance");
             } else {
                 Log.d("ActivityInstance", "activity isn't flutter instance");
-            }
-            if (activity instanceof FlutterActivity) {
-                phoneReplayApi = new PhoneReplayApi(context, accessKey, "FLUTTER");
-                Log.d("ActivityInstance", "activity is flutter instance");
             }
         } catch (ClassNotFoundException e) {
             Log.d("ActivityInstance", "Class not found: " + e.getMessage());
