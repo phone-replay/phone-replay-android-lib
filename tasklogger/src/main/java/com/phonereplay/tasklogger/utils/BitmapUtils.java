@@ -3,7 +3,11 @@ package com.phonereplay.tasklogger.utils;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
+
+import java.io.ByteArrayOutputStream;
 
 public class BitmapUtils {
 
@@ -23,6 +27,12 @@ public class BitmapUtils {
         canvas.translate(-view.getScrollX(), -view.getScrollY());
         view.draw(canvas);
         return captureAndResizeView(bitmap, view.getMeasuredWidth(), view.getMeasuredHeight(), view.getMeasuredHeight());
+    }
+
+    private void logBase64(ByteArrayOutputStream stream) {
+        // Implementation to log the Base64 encoded string of the screenshot
+        String base64String = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT);
+        Log.d("Screenshot", base64String);
     }
 
     public Bitmap rotateBitmap(Bitmap original, float degrees) {

@@ -4,31 +4,21 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Base64;
 import android.util.Log;
 import android.view.PixelCopy;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
 public class PhoneReplayApi {
 
-    /**
-     * Intervalo de captura em milissegundos.
-     * Certifique-se de que o intervalo de captura e a taxa de quadros do vídeo (SERVIDOR PYTHON) estão alinhados.
-     * Se você está capturando a cada 100 milliseconds, isso seria aproximadamente 10 quadros por segundo
-     * (considerando que 1 segundo = 1000 milliseconds).
-     */
     private static final int RECORDING_INTERVAL = 100;
     public static boolean startRecording = false;
     private static Thread thread;
@@ -42,16 +32,13 @@ public class PhoneReplayApi {
     private static StopwatchUtility stopwatch = new StopwatchUtility();
     @SuppressLint("StaticFieldLeak")
     private static Context context;
+    private static String platform;
     private static String projectKey;
     private static long startTime;
     private static long endTime;
-    private static View currentView;
-    public boolean orientation = false;
-    public int mainHeight = 0;
-    public int mainWidth = 0;
 
-    public PhoneReplayApi(Context context, String accessKey) {
-        //Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
+    public PhoneReplayApi(Context context, String accessKey, String platform) {
+        PhoneReplayApi.platform = platform;
         PhoneReplayApi.context = context;
         projectKey = accessKey;
         apiClientService = new PhoneReplayService();
@@ -70,10 +57,12 @@ public class PhoneReplayApi {
 
 
     public static void startRecording() {
-        Activity mainActivity = MainActivityFetcher.getMainActivity();
-        currentActivity = mainActivity;
-        assert mainActivity != null;
-        initThread(mainActivity);
+        if (Objects.equals(platform, "FLUTTER")) {
+            Activity mainActivity = MainActivityFetcher.getMainActivity();
+            currentActivity = mainActivity;
+            assert mainActivity != null;
+            ViewInitializer.setupUserInteractionCallback(mainActivity);
+        }
         new Thread(() -> {
             gestureRecorder = new GestureRecorder();
             startRecording = true;
@@ -126,72 +115,6 @@ public class PhoneReplayApi {
         }
     }
 
-    private static void initView(Activity activity) {
-        String TAG = "initView";
-
-        Log.d(TAG, "Initializing view for activity: " + activity.getClass().getName());
-
-        try {
-            Class<?> flutterActivityClass = Class.forName("io.flutter.embedding.android.FlutterActivity");
-
-            if (flutterActivityClass.isInstance(activity)) {
-                ViewGroup rootView = activity.findViewById(android.R.id.content);
-                if (rootView != null) {
-                    Log.d(TAG, "Root view found with child count: " + rootView.getChildCount());
-                    for (int i = 0; i < rootView.getChildCount(); i++) {
-                        View child = rootView.getChildAt(i);
-                        Log.d(TAG, "Child view at index " + i + ": " + child.getClass().getName());
-                        if (child.getClass().getName().equals("io.flutter.embedding.android.FlutterView")) {
-                            currentView = child;
-                            Log.d(TAG, "FlutterView found and set as current view");
-                            break;
-                        }
-                    }
-                } else {
-                    Log.e(TAG, "Root view is null");
-                }
-            } else {
-                currentView = activity.getWindow().getDecorView();
-                Log.d(TAG, "DecorView set as current view");
-            }
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG, "FlutterActivity class not found", e);
-            currentView = activity.getWindow().getDecorView();
-            Log.d(TAG, "DecorView set as current view");
-        }
-    }
-
-    private static byte[] writeImageFromBitmap(Bitmap bitmap) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 1, byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
-    }
-
-    private static void captureViewBitmap(View view) {
-        try {
-            Bitmap currentBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(currentBitmap);
-            view.draw(canvas);
-
-            byte[] a = writeImageFromBitmap(currentBitmap);
-            String base64String = Base64.encodeToString(a, Base64.DEFAULT);
-            Log.d("captureViewBitmap", "base64String " + base64String);
-        } catch (Exception e) {
-            Log.e("captureViewBitmap", "Failed to capture bitmap", e);
-        }
-    }
-
-    private static void initThread(Activity activity) {
-        Log.d("TaskLoggerInstrumentation", "initThread called with activity: " + activity.getClass().getSimpleName());
-        Window window = activity.getWindow();
-
-        if (window != null && !(window.getCallback() instanceof UserInteractionAwareCallback)) {
-            Log.d("UserInteractionAwareCallback", ": " + activity.getClass().getSimpleName());
-            window.setCallback(new UserInteractionAwareCallback(window.getCallback(), activity));
-        }
-        initView(activity);
-    }
-
     public void initHandler() {
         mHandler = new Handler();
     }
@@ -207,6 +130,7 @@ public class PhoneReplayApi {
                         public void run() {
                             if (startRecording) {
                                 try {
+                                    View currentView = ViewInitializer.getCurrentView();
                                     if (currentView != null) {
                                         Bitmap bitmap;
                                         bitmap = Bitmap.createBitmap(currentView.getWidth(), currentView.getHeight(), Bitmap.Config.ARGB_8888);
@@ -253,12 +177,4 @@ public class PhoneReplayApi {
         }
         return null;
     }
-
-    private void logBase64(ByteArrayOutputStream stream) {
-        // Implementation to log the Base64 encoded string of the screenshot
-        String base64String = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT);
-        Log.d("Screenshot", base64String);
-    }
-
 }
-
