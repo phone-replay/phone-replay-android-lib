@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
-import io.flutter.embedding.android.FlutterActivity;
-
 public class PhoneReplay extends Activity {
 
     private static PhoneReplayApi phoneReplayApi;
@@ -30,26 +28,9 @@ public class PhoneReplay extends Activity {
     }
 
     private void attachBaseContext() {
-        try {
-            Activity activity = MainActivityFetcher.getOnlyMainActivity();
-            if (activity instanceof FlutterActivity) {
-                phoneReplayApi = new PhoneReplayApi(context, accessKey, "FLUTTER");
-                Log.d("ActivityInstance", "activity is flutter instance");
-            }
+        phoneReplayApi = new PhoneReplayApi(context, accessKey, "FLUTTER");
+        Log.d("ActivityInstance", "activity is flutter instance");
 
-            Class<?> flutterActivityClass = Class.forName("io.flutter.embedding.android.FlutterActivity");
-
-            Log.d("ActivityInstance", "Class name: " + flutterActivityClass.getName());
-
-            if (flutterActivityClass.isInstance(activity)) {
-                Log.d("ActivityInstance", "activity is flutter instance");
-            } else {
-                Log.d("ActivityInstance", "activity isn't flutter instance");
-            }
-        } catch (ClassNotFoundException e) {
-            Log.d("ActivityInstance", "Class not found: " + e.getMessage());
-            e.printStackTrace();
-        }
         phoneReplayApi.initThread();
         phoneReplayApi.initHandler();
     }
