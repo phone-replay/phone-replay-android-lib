@@ -16,19 +16,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.phonereplay.frankenstein_app.databinding.ActivityMainBinding;
 import com.phonereplay.tasklogger.PhoneReplayApi;
-import com.phonereplay.tasklogger.StopwatchUtility;
+import com.smartlook.android.core.api.Smartlook;
 
-public class MainActivity extends AppCompatActivity implements StopwatchUtility.StopwatchListener {
+public class MainActivity extends AppCompatActivity {
     private static final int SCREEN_RECORD_REQUEST_CODE = 777;
     ActivityMainBinding binding;
+    Smartlook smartlookInstance = Smartlook.getInstance();
     private NoteViewModel noteViewModel;
     private TextView textViewTimer;
 
     public void startMethods() {
+        //smartlookInstance.start();
         PhoneReplayApi.startRecording();
     }
 
     public void stopMethods() {
+        //smartlookInstance.stop();
         PhoneReplayApi.stopRecording();
     }
 
@@ -38,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        noteViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(this.getApplication()))
+        noteViewModel = new ViewModelProvider(this, (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(this.getApplication()))
                 .get(NoteViewModel.class);
         binding.floatingActionButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, DataInsertActivity.class);
@@ -47,8 +50,6 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
             startActivityForResult(intent, 1);
         });
         binding.buttonFirst.setOnClickListener(view -> startMethods());
-        textViewTimer = findViewById(R.id.textViewTimer);
-        PhoneReplayApi.getStopwatch().setStopwatchListener(this);
 
         binding.buttonStop.setOnClickListener(view -> stopMethods());
 
@@ -111,11 +112,5 @@ public class MainActivity extends AppCompatActivity implements StopwatchUtility.
                 Toast.makeText(this, "note updated", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    @Override
-    public void onTick(String time) {
-        //Log.d("onTick", "onTick: " + time);
-        runOnUiThread(() -> textViewTimer.setText(time));
     }
 }
