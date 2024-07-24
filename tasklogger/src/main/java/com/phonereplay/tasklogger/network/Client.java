@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 public class Client {
 
-    private static final String BASE_URL_K8S = "http://10.0.0.107:8080";
+    private static final String BASE_URL_K8S = "http://10.0.0.102:8080";
     private static String BASE_URL = null;
 
     private static String getString(HttpURLConnection conn) throws IOException {

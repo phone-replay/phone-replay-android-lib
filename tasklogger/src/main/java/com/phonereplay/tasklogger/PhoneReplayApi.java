@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
+import com.phonereplay.tasklogger.utils.BitmapUtils;
 
 import java.io.IOException;
 
@@ -30,7 +31,6 @@ public class PhoneReplayApi {
     private static Activity currentActivity;
     @SuppressLint("StaticFieldLeak")
     private static GestureRecorder gestureRecorder;
-    private static StopwatchUtility stopwatch = new StopwatchUtility();
     @SuppressLint("StaticFieldLeak")
     private static Context context;
     private static String projectKey;
@@ -48,13 +48,6 @@ public class PhoneReplayApi {
         apiClientService = new PhoneReplayService();
     }
 
-    public static StopwatchUtility getStopwatch() {
-        if (stopwatch == null) {
-            stopwatch = new StopwatchUtility();
-        }
-        return stopwatch;
-    }
-
     public static Context getContext() {
         return context;
     }
@@ -65,14 +58,10 @@ public class PhoneReplayApi {
 
     public static void startRecording() {
         new Thread(() -> {
-            boolean validateAccessKey = apiClientService.validateAccessKey(projectKey);
-            if (validateAccessKey) {
-                gestureRecorder = new GestureRecorder();
-                startRecording = true;
-                startTime = System.currentTimeMillis();
-                mHandler.postDelayed(thread, RECORDING_INTERVAL);
-                startCountUp();
-            }
+            gestureRecorder = new GestureRecorder();
+            startRecording = true;
+            startTime = System.currentTimeMillis();
+            mHandler.postDelayed(thread, RECORDING_INTERVAL);
         }).start();
     }
 
@@ -82,10 +71,7 @@ public class PhoneReplayApi {
             startRecording = false;
             endTime = System.currentTimeMillis();
             mHandler.removeCallbacks(thread);
-            Log.d("timer", stopwatch.timer);
-            stopwatch.stop();
 
-            // Calcular a duração da gravação
             long duration = endTime - startTime;
             Log.d("RecordingDuration", "Duração da gravação: " + duration + " milissegundos");
 
@@ -104,20 +90,15 @@ public class PhoneReplayApi {
         }
     }
 
-    private static void startCountUp() {
-        if (stopwatch == null) {
-            stopwatch = new StopwatchUtility();
-        }
-        stopwatch.start();
-    }
-
     public static void registerTouchAction(String action, float x, float y) {
         if (startRecording && currentActivity != null) {
             String activityName = currentActivity.getClass().getSimpleName();
-            String targetTime = stopwatch.timer;
+
+            long currentTime = System.currentTimeMillis();
+            long timeSinceStart = currentTime - startTime;
             String gestureType = "(" + x + ", " + y + ")";
-            gestureRecorder.registerGesture(activityName, action, targetTime, gestureType);
-            Log.d("ActionRegistered", "Gesture: " + gestureType + ", Time: " + targetTime);
+            gestureRecorder.registerGesture(activityName, action, String.valueOf(timeSinceStart), gestureType);
+            Log.d("ActionRegistered", "Gesture: " + gestureType + ", Time: " + timeSinceStart);
         }
     }
 
@@ -161,9 +142,7 @@ public class PhoneReplayApi {
                             if (startRecording) {
                                 try {
                                     if (currentView != null) {
-                                        currentView.setDrawingCacheEnabled(true);
-                                        Bitmap bitmap = currentView.getDrawingCache();
-                                        //Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
+                                        Bitmap bitmap = BitmapUtils.convertViewToDrawable(currentView);
                                         apiClientService.queueBytesBitmap(bitmap, true);
                                         currentView.destroyDrawingCache();
                                     } else {
