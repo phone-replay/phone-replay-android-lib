@@ -1,37 +1,28 @@
 package com.phonereplay.tasklogger;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 
 import com.phonereplay.tasklogger.service.PhoneReplayService;
 import com.phonereplay.tasklogger.utils.BitmapUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PhoneReplayApi {
 
-    /**
-     * Intervalo de captura em milissegundos.
-     * Certifique-se de que o intervalo de captura e a taxa de quadros do vídeo (SERVIDOR PYTHON) estão alinhados.
-     * Se você está capturando a cada 100 milliseconds, isso seria aproximadamente 10 quadros por segundo
-     * (considerando que 1 segundo = 1000 milliseconds).
-     */
     private static final int RECORDING_INTERVAL = 100;
+    // Mapa estático para armazenar os logs de gestos de todas as atividades
+    private static final Map<String, ActivityGesture> activityGestureLogs = new HashMap<>();
     public static boolean startRecording = false;
     private static Thread thread;
     private static Handler mHandler;
-    @SuppressLint("StaticFieldLeak")
     private static PhoneReplayService apiClientService;
-    @SuppressLint("StaticFieldLeak")
     private static Activity currentActivity;
-    @SuppressLint("StaticFieldLeak")
-    private static GestureRecorder gestureRecorder;
-    @SuppressLint("StaticFieldLeak")
     private static Context context;
     private static String projectKey;
     private static long startTime;
@@ -42,7 +33,6 @@ public class PhoneReplayApi {
     private View currentView;
 
     public PhoneReplayApi(Context context, String accessKey) {
-        //Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler(context));
         PhoneReplayApi.context = context;
         projectKey = accessKey;
         apiClientService = new PhoneReplayService();
@@ -58,31 +48,22 @@ public class PhoneReplayApi {
 
     public static void startRecording() {
         new Thread(() -> {
-            gestureRecorder = new GestureRecorder();
             startRecording = true;
             startTime = System.currentTimeMillis();
             mHandler.postDelayed(thread, RECORDING_INTERVAL);
         }).start();
     }
 
-
     public static void stopRecording() {
         if (startRecording) {
             startRecording = false;
             endTime = System.currentTimeMillis();
             mHandler.removeCallbacks(thread);
-
             long duration = endTime - startTime;
-            Log.d("RecordingDuration", "Duração da gravação: " + duration + " milissegundos");
-
             DeviceModel deviceModel = new DeviceModel(context);
-            if (gestureRecorder != null) {
-                String summaryLog = gestureRecorder.generateSummaryLog();
-                Log.d("GestureRecorderSummary", summaryLog);
-            }
             new Thread(() -> {
                 try {
-                    apiClientService.createVideo(gestureRecorder.currentSession, deviceModel, projectKey, duration);
+                    apiClientService.createVideo(getActivityGesture(), deviceModel, projectKey, duration);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -90,15 +71,29 @@ public class PhoneReplayApi {
         }
     }
 
-    public static void registerTouchAction(String action, float x, float y) {
+    public static void registerTouchAction(String action, float x, float y, Gesture currentGesture) {
         if (startRecording && currentActivity != null) {
-            String activityName = currentActivity.getClass().getSimpleName();
-
             long currentTime = System.currentTimeMillis();
             long timeSinceStart = currentTime - startTime;
             String gestureType = "(" + x + ", " + y + ")";
-            gestureRecorder.registerGesture(activityName, action, String.valueOf(timeSinceStart), gestureType);
-            Log.d("ActionRegistered", "Gesture: " + gestureType + ", Time: " + timeSinceStart);
+            if (currentGesture != null) {
+                currentGesture.addAction(action, String.valueOf(timeSinceStart), gestureType);
+            }
+        }
+    }
+
+    public static Map<String, ActivityGesture> getActivityGesture() {
+        return activityGestureLogs;
+    }
+
+    public static void addActivityGesture(String activityName, Gesture gesture) {
+        ActivityGesture log = activityGestureLogs.get(activityName);
+        if (log != null) {
+            log.addGesture(gesture);
+        } else {
+            log = new ActivityGesture(activityName);
+            log.addGesture(gesture);
+            activityGestureLogs.put(activityName, log);
         }
     }
 
@@ -115,7 +110,6 @@ public class PhoneReplayApi {
 
     public void setCurrentView(View currentView) {
         this.currentView = currentView;
-        Log.d("ViewLogger", "Current View: " + currentView.toString());
     }
 
     public Handler getmHandler() {
@@ -129,7 +123,6 @@ public class PhoneReplayApi {
     public void initHandler() {
         mHandler = new Handler();
     }
-
 
     public void initThread() {
         thread = new Thread() {
@@ -164,6 +157,4 @@ public class PhoneReplayApi {
             }
         };
     }
-
 }
-
