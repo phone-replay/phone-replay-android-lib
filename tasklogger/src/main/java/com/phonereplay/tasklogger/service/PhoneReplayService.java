@@ -2,13 +2,14 @@ package com.phonereplay.tasklogger.service;
 
 import android.graphics.Bitmap;
 
+import com.phonereplay.tasklogger.ActivityGesture;
 import com.phonereplay.tasklogger.DeviceModel;
-import com.phonereplay.tasklogger.LocalSession;
 import com.phonereplay.tasklogger.network.Client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 
@@ -114,7 +115,7 @@ public class PhoneReplayService {
         bitmap.recycle();
     }
 
-    public void createVideo(LocalSession timeLines, DeviceModel deviceModel, String projectKey, long duration) throws IOException {
+    public void createVideo(Map<String, ActivityGesture> timeLines, DeviceModel deviceModel, String projectKey, long duration) throws IOException {
         client.sendBinaryData(compress(fullBytesVideo), timeLines, deviceModel, projectKey, duration);
         this.fullBytesVideo = null;
     }
